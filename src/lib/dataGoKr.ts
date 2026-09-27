@@ -56,7 +56,11 @@ export async function callDataGoKr(
     signal: AbortSignal.timeout(20_000),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(`${label} HTTP ${res.status}: ${text.slice(0, 120)}`);
+  if (!res.ok) {
+    // 게이트웨이 오류는 XML(OpenAPI_ServiceResponse)로 사유가 옴
+    const reason = text.match(/<returnAuthMsg>([^<]*)</)?.[1] ?? text.match(/<errMsg>([^<]*)</)?.[1] ?? text.slice(0, 120);
+    throw new Error(`${label} HTTP ${res.status}: ${reason.trim()}`);
+  }
 
   let items: RawItem[];
   let totalCount: number;
