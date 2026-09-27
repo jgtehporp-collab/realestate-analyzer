@@ -2,7 +2,7 @@ name: 급등·급락 단지 갱신
 
 on:
   schedule:
-    - cron: "40 21 * * *" # 매일 06:40 KST
+    - cron: "7 20 * * *" # 매일 05:07 KST (정각은 GitHub 예약 지연이 심해 7분으로)
   workflow_dispatch:
 
 permissions:
