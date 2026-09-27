@@ -41,7 +41,7 @@ export default async function PresalePage({ searchParams }: Props) {
       <h1 className="text-xl font-bold">분양 · 청약</h1>
       <p className="mt-1 text-sm text-slate-600">청약홈 APT 분양공고(최근 12개월·예정)와 주택형별 분양가·경쟁률, 인근 신축 실거래 대비 안전마진을 봅니다.</p>
       <div className="mt-4">
-        <RegionPicker province={province} lawd={lawd} />
+        <RegionPicker key={`${province}:${lawd}`} province={province} lawd={lawd} />
       </div>
 
       {error && (

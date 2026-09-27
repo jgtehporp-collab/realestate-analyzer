@@ -34,13 +34,14 @@ const median = (xs: number[]) => {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
 
-const MIN_RECENT = 2;
-const MIN_BASE = 3;
-const MIN_PRICE = 10000; // 1억 미만 제외
+export const MIN_RECENT = 3;
+export const MIN_BASE = 5;
+export const MIN_PRICE = 10000; // 1억 미만 제외
+export const MIN_CHANGE = 0.03;
 
 /**
  * months: 오래된 순 9개월 (앞 6개월 = 기준, 뒤 3개월 = 최근).
- * 같은 단지·같은 평형대끼리 최근 3개월 중위가 vs 이전 6개월 중위가 비교. 직거래·해제거래 제외.
+ * 같은 단지·같은 평형대끼리 최근 3개월 중위가 vs 이전 6개월 중위가 비교. 직거래·해제거래·1층 이하 제외.
  */
 export function computeHotTrades(
   byLawd: { lawd: string; region: string; rows: TradeRow[] }[],
@@ -53,7 +54,8 @@ export function computeHotTrades(
   for (const { lawd, region, rows } of byLawd) {
     const groups = new Map<string, TradeRow[]>();
     for (const t of rows) {
-      if (t.direct || t.price < MIN_PRICE) continue;
+      // 직거래·1억 미만·1층 이하(저층 할인으로 급락 왜곡) 제외
+      if (t.direct || t.price < MIN_PRICE || t.floor <= 1) continue;
       const key = `${complexId(t)}#${areaBand(t.area)}`;
       const g = groups.get(key);
       if (g) g.push(t);
@@ -94,7 +96,7 @@ export function computeHotTrades(
     const seen = new Set<string>();
     return list.filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true))).slice(0, limit);
   };
-  const up = pick(out.filter((x) => x.change > 0.03).sort((a, b) => b.change - a.change));
-  const down = pick(out.filter((x) => x.change < -0.03).sort((a, b) => a.change - b.change));
+  const up = pick(out.filter((x) => x.change > MIN_CHANGE).sort((a, b) => b.change - a.change));
+  const down = pick(out.filter((x) => x.change < -MIN_CHANGE).sort((a, b) => a.change - b.change));
   return { up, down };
 }
