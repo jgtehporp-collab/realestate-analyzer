@@ -5,10 +5,39 @@ import { getServiceKey, num, str } from "./dataGoKr";
 import { HOUR, memo } from "./memo";
 
 const BASE = "https://api.odcloud.kr/api";
-const DETAIL = `${BASE}/ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancDetail`;
-const MODELS = `${BASE}/ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancMdl`;
-const CMPET = `${BASE}/ApplyhomeInfoCmpetRtSvc/v1/getAPTLttotPblancCmpet`;
 const SCORE = `${BASE}/ApplyhomeInfoCmpetRtSvc/v1/getAptLttotPblancScore`;
+
+/** apt: 일반 APT 분양 / remndr: 무순위·불법행위 재공급(줍줍) / opt: 임의공급(선착순 성격) */
+export type AnnKind = "apt" | "remndr" | "opt";
+
+const EP: Record<AnnKind, { detail: string; models: string; cmpet: string; dateCompact: boolean }> = {
+  apt: {
+    detail: `${BASE}/ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancDetail`,
+    models: `${BASE}/ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancMdl`,
+    cmpet: `${BASE}/ApplyhomeInfoCmpetRtSvc/v1/getAPTLttotPblancCmpet`,
+    dateCompact: false,
+  },
+  remndr: {
+    detail: `${BASE}/ApplyhomeInfoDetailSvc/v1/getRemndrLttotPblancDetail`,
+    models: `${BASE}/ApplyhomeInfoDetailSvc/v1/getRemndrLttotPblancMdl`,
+    cmpet: `${BASE}/ApplyhomeInfoCmpetRtSvc/v1/getRemndrLttotPblancCmpet`,
+    dateCompact: false,
+  },
+  opt: {
+    detail: `${BASE}/ApplyhomeInfoDetailSvc/v1/getOPTLttotPblancDetail`,
+    models: `${BASE}/ApplyhomeInfoDetailSvc/v1/getOPTLttotPblancMdl`,
+    cmpet: `${BASE}/ApplyhomeInfoCmpetRtSvc/v1/getOPTLttotPblancCmpet`,
+    dateCompact: true, // 임의공급은 모집공고일이 YYYYMMDD
+  },
+};
+
+export const isAnnKind = (k: string): k is AnnKind => k === "apt" || k === "remndr" || k === "opt";
+
+/** 20260918 → 2026-09-18 (이미 대시 형식이면 그대로) */
+const day = (v: unknown) => {
+  const t = str(v);
+  return /^\d{8}$/.test(t) ? `${t.slice(0, 4)}-${t.slice(4, 6)}-${t.slice(6, 8)}` : t;
+};
 
 type Raw = Record<string, unknown>;
 
@@ -41,6 +70,8 @@ async function callOdcloud(endpoint: string, cond: Record<string, string>, label
 }
 
 export type Announcement = {
+  kind: AnnKind;
+  kindLabel: string; // 무순위 / 불법행위 재공급 / 임의공급 / APT
   houseManageNo: string;
   pblancNo: string;
   name: string;
@@ -71,8 +102,11 @@ export type Announcement = {
 
 const yes = (v: unknown) => str(v).toUpperCase() === "Y";
 
-function toAnnouncement(r: Raw): Announcement {
+function toAnnouncement(r: Raw, kind: AnnKind): Announcement {
+  const receiptStart = day(r.RCEPT_BGNDE) || day(r.SUBSCRPT_RCEPT_BGNDE) || day(r.GNRL_RCEPT_BGNDE);
   return {
+    kind,
+    kindLabel: kind === "opt" ? "임의공급" : str(r.HOUSE_SECD_NM) || (kind === "remndr" ? "무순위" : "APT"),
     houseManageNo: str(r.HOUSE_MANAGE_NO),
     pblancNo: str(r.PBLANC_NO),
     name: str(r.HOUSE_NM),
@@ -80,15 +114,15 @@ function toAnnouncement(r: Raw): Announcement {
     saleType: str(r.HOUSE_DTL_SECD_NM),
     address: str(r.HSSPLY_ADRES),
     households: num(r.TOT_SUPLY_HSHLDCO),
-    noticeDate: str(r.RCRIT_PBLANC_DE),
-    specialStart: str(r.SPSPLY_RCEPT_BGNDE),
-    specialEnd: str(r.SPSPLY_RCEPT_ENDDE),
-    receiptStart: str(r.RCEPT_BGNDE),
-    receiptEnd: str(r.RCEPT_ENDDE),
-    rank1Local: str(r.GNRL_RNK1_CRSPAREA_RCPTDE),
-    winnerDate: str(r.PRZWNER_PRESNATN_DE),
-    contractStart: str(r.CNTRCT_CNCLS_BGNDE),
-    contractEnd: str(r.CNTRCT_CNCLS_ENDDE),
+    noticeDate: day(r.RCRIT_PBLANC_DE),
+    specialStart: day(r.SPSPLY_RCEPT_BGNDE),
+    specialEnd: day(r.SPSPLY_RCEPT_ENDDE),
+    receiptStart,
+    receiptEnd: day(r.RCEPT_ENDDE) || day(r.SUBSCRPT_RCEPT_ENDDE) || day(r.GNRL_RCEPT_ENDDE),
+    rank1Local: day(r.GNRL_RNK1_CRSPAREA_RCPTDE) || (kind === "apt" ? "" : receiptStart),
+    winnerDate: day(r.PRZWNER_PRESNATN_DE),
+    contractStart: day(r.CNTRCT_CNCLS_BGNDE),
+    contractEnd: day(r.CNTRCT_CNCLS_ENDDE),
     moveIn: str(r.MVN_PREARNGE_YM),
     builder: str(r.CNSTRCT_ENTRPS_NM),
     developer: str(r.BSNS_MBY_NM),
@@ -102,22 +136,23 @@ function toAnnouncement(r: Raw): Announcement {
   };
 }
 
-/** 공급위치 주소에 keyword가 포함된 APT 분양공고 (모집공고일 since 이후). */
-export function listAnnouncements(keyword: string, since: string): Promise<Announcement[]> {
-  return memo(`ah-list:${keyword}:${since}`, 3 * HOUR, async () => {
+/** 공급위치 주소에 keyword가 포함된 분양공고 (모집공고일 since(YYYY-MM-DD) 이후). */
+export function listAnnouncements(keyword: string, since: string, kind: AnnKind = "apt"): Promise<Announcement[]> {
+  return memo(`ah-list:${kind}:${keyword}:${since}`, 3 * HOUR, async () => {
+    const ep = EP[kind];
     const rows = await callOdcloud(
-      DETAIL,
-      { "HSSPLY_ADRES::LIKE": keyword, "RCRIT_PBLANC_DE::GTE": since },
-      "청약홈 분양정보 API",
+      ep.detail,
+      { "HSSPLY_ADRES::LIKE": keyword, "RCRIT_PBLANC_DE::GTE": ep.dateCompact ? since.replaceAll("-", "") : since },
+      kind === "apt" ? "청약홈 분양정보 API" : "청약홈 무순위·임의공급 API",
     );
-    return rows.map(toAnnouncement);
+    return rows.map((r) => toAnnouncement(r, kind));
   });
 }
 
-export function getAnnouncement(houseManageNo: string): Promise<Announcement | null> {
-  return memo(`ah-one:${houseManageNo}`, 3 * HOUR, async () => {
-    const rows = await callOdcloud(DETAIL, { "HOUSE_MANAGE_NO::EQ": houseManageNo }, "청약홈 분양정보 API", 10);
-    return rows[0] ? toAnnouncement(rows[0]) : null;
+export function getAnnouncement(houseManageNo: string, kind: AnnKind = "apt"): Promise<Announcement | null> {
+  return memo(`ah-one:${kind}:${houseManageNo}`, 3 * HOUR, async () => {
+    const rows = await callOdcloud(EP[kind].detail, { "HOUSE_MANAGE_NO::EQ": houseManageNo }, "청약홈 분양정보 API", 10);
+    return rows[0] ? toAnnouncement(rows[0], kind) : null;
   });
 }
 
@@ -134,9 +169,9 @@ export type HouseModel = {
 export type Competition = { modelNo: string; houseType: string; rank: string; reside: string; supply: number; requests: number; rate: string };
 export type Score = { modelNo: string; houseType: string; reside: string; low: number; high: number; avg: number };
 
-export function getModels(houseManageNo: string): Promise<HouseModel[]> {
-  return memo(`ah-mdl:${houseManageNo}`, 12 * HOUR, async () => {
-    const rows = await callOdcloud(MODELS, { "HOUSE_MANAGE_NO::EQ": houseManageNo }, "청약홈 주택형 API");
+export function getModels(houseManageNo: string, kind: AnnKind = "apt"): Promise<HouseModel[]> {
+  return memo(`ah-mdl:${kind}:${houseManageNo}`, 12 * HOUR, async () => {
+    const rows = await callOdcloud(EP[kind].models, { "HOUSE_MANAGE_NO::EQ": houseManageNo }, "청약홈 주택형 API");
     return rows
       .map((r) => ({
         modelNo: str(r.MODEL_NO),
@@ -151,9 +186,9 @@ export function getModels(houseManageNo: string): Promise<HouseModel[]> {
   });
 }
 
-export function getCompetition(houseManageNo: string): Promise<Competition[]> {
-  return memo(`ah-cmp:${houseManageNo}`, 3 * HOUR, async () => {
-    const rows = await callOdcloud(CMPET, { "HOUSE_MANAGE_NO::EQ": houseManageNo }, "청약홈 경쟁률 API");
+export function getCompetition(houseManageNo: string, kind: AnnKind = "apt"): Promise<Competition[]> {
+  return memo(`ah-cmp:${kind}:${houseManageNo}`, 3 * HOUR, async () => {
+    const rows = await callOdcloud(EP[kind].cmpet, { "HOUSE_MANAGE_NO::EQ": houseManageNo }, "청약홈 경쟁률 API");
     return rows.map((r) => ({
       modelNo: str(r.MODEL_NO),
       houseType: str(r.HOUSE_TY),

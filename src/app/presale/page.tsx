@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
+import HotPresales from "@/components/HotPresales";
 import RegionPicker from "@/components/RegionPicker";
 import StatusBadge from "@/components/StatusBadge";
 import { getPresaleList } from "@/lib/presale";
@@ -27,7 +29,15 @@ export default async function PresalePage({ searchParams }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="mx-auto grid max-w-6xl gap-4 px-4 py-6 lg:grid-cols-[320px_1fr]">
+      <aside className="lg:sticky lg:top-16 lg:self-start">
+        <Suspense
+          fallback={<div className="rounded-xl bg-white p-4 text-xs text-slate-500 shadow-sm">줍줍 · 주목 분양 불러오는 중…</div>}
+        >
+          <HotPresales />
+        </Suspense>
+      </aside>
+      <div className="min-w-0">
       <h1 className="text-xl font-bold">분양 · 청약</h1>
       <p className="mt-1 text-sm text-slate-600">청약홈 APT 분양공고(최근 12개월·예정)와 주택형별 분양가·경쟁률, 인근 신축 실거래 대비 안전마진을 봅니다.</p>
       <div className="mt-4">
@@ -78,6 +88,7 @@ export default async function PresalePage({ searchParams }: Props) {
           </ul>
         </section>
       )}
+      </div>
     </div>
   );
 }

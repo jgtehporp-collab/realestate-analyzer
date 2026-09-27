@@ -120,6 +120,8 @@ function shiftDate(days: number): string {
 
 function demoAnnouncement(no: string, name: string, address: string, offset: number): Announcement {
   return {
+    kind: "apt",
+    kindLabel: "APT",
     houseManageNo: no,
     pblancNo: no,
     name,
