@@ -183,9 +183,26 @@ export default function ReportView({ report, vworldKey, requestId }: { report: R
               <div className="grid grid-cols-3 gap-px bg-slate-200">
                 <GradeTile label="환경" grade={location?.env ?? null} />
                 <GradeTile label="학군" grade={location?.school ?? null} />
-                <GradeTile label="공급" grade={null} />
+                <GradeTile label="공급" grade={report.extras.supply?.grade ?? null} />
               </div>
               <StatusNote label="주변시설(카카오)" status={status.poi} />
+              <StatusNote label="공급(청약홈)" status={status.supply} />
+              {report.extras.supply && report.extras.supply.items.length > 0 && (
+                <div className="border-t border-slate-100 px-3 py-1.5 text-[11px] text-slate-600">
+                  <div className="font-semibold text-slate-700">
+                    향후 3년 입주예정 ({report.extras.supply.byYear.map((y) => `${y.year} ${y.households.toLocaleString("ko-KR")}`).join(" · ")})
+                  </div>
+                  {report.extras.supply.items.slice(0, 4).map((x) => (
+                    <div key={x.name + x.moveIn} className="flex justify-between">
+                      <span className="truncate">{x.name}</span>
+                      <span className="shrink-0 pl-2">
+                        {x.moveIn.slice(0, 4)}.{x.moveIn.slice(4, 6)} · {x.households.toLocaleString("ko-KR")}세대
+                      </span>
+                    </div>
+                  ))}
+                  {report.extras.supply.items.length > 4 && <div className="text-slate-400">외 {report.extras.supply.items.length - 4}곳</div>}
+                </div>
+              )}
             </Card>
 
             <Card title="특징 태그">

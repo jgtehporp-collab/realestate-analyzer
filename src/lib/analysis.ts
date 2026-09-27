@@ -1,6 +1,7 @@
 // 실거래 원자료(매매/전월세)를 단지 1페이지 분석 리포트용 데이터로 가공하는 순수 함수 모음.
 import type { BuildingInfo, KaptInfo } from "./kapt";
 import type { LocationInfo } from "./location";
+import type { SupplyInfo } from "./presale";
 import type { RentRow, TradeRow } from "./molit";
 
 export type ExtraStatus = { state: "ok" | "nokey" | "notfound" | "error" | "demo"; message?: string };
@@ -9,7 +10,8 @@ export type Extras = {
   kapt: KaptInfo | null;
   building: BuildingInfo | null;
   location: LocationInfo | null;
-  status: { kapt: ExtraStatus; building: ExtraStatus; map: ExtraStatus; poi: ExtraStatus };
+  supply: SupplyInfo | null;
+  status: { kapt: ExtraStatus; building: ExtraStatus; map: ExtraStatus; poi: ExtraStatus; supply: ExtraStatus };
 };
 
 export type Complex = {
@@ -379,7 +381,8 @@ export function buildReport(input: {
       kapt: null,
       building: null,
       location: null,
-      status: { kapt: { state: "demo" }, building: { state: "demo" }, map: { state: "demo" }, poi: { state: "demo" } },
+      supply: null,
+      status: { kapt: { state: "demo" }, building: { state: "demo" }, map: { state: "demo" }, poi: { state: "demo" }, supply: { state: "demo" } },
     },
     generatedAt: now.toISOString(),
   };

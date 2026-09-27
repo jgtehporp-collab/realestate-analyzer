@@ -12,6 +12,7 @@ import {
   type Score,
 } from "./applyhome";
 import { getServiceKey } from "./dataGoKr";
+import type { Grade } from "./location";
 import { demoAnnouncements, demoPresaleDetail, demoRows } from "./demo";
 import { fetchTrades, recentMonths, type TradeRow } from "./molit";
 import { PROVINCES, findRegion } from "./regions";
@@ -184,4 +185,56 @@ function combine(models: HouseModel[], competition: Competition[], scores: Score
       marginPct: margin !== null && m.topPrice ? margin / m.topPrice : null,
     };
   });
+}
+
+export type SupplyInfo = {
+  grade: Grade;
+  total: number; // 향후 3년 입주예정 공급세대 합
+  perYear: number;
+  byYear: { year: number; households: number }[];
+  items: { name: string; moveIn: string; households: number }[]; // 입주 빠른 순
+};
+
+/** 연평균 입주 물량 기준 공급 등급 (적을수록 가격에 우호적 → S) */
+export function supplyGrade(perYear: number): Grade["grade"] {
+  if (perYear < 500) return "S";
+  if (perYear < 1500) return "A";
+  if (perYear < 3000) return "B";
+  return "C";
+}
+
+/** 해당 구의 향후 3년 내 입주예정 APT (청약홈 분양공고의 입주예정월·공급규모 기준) */
+export async function upcomingSupply(lawd: string): Promise<SupplyInfo | null> {
+  const region = findRegion(lawd);
+  if (!region) return null;
+  const m = regionMatcher(region.province.name, lawd);
+  const now = new Date(Date.now() + 9 * 3600e3);
+  const nowYm = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  const endYm = `${now.getUTCFullYear() + 3}${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  // 분양 후 입주까지 보통 2~3년이라 4년 전 공고부터 조회
+  const since = `${now.getUTCFullYear() - 4}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01`;
+  const list = (await listAnnouncements(m.keyword, since)).filter((a) => m.match(a.address));
+  const seen = new Set<string>();
+  const items = list
+    .filter((a) => a.moveIn && a.moveIn >= nowYm && a.moveIn < endYm)
+    .filter((a) => (seen.has(a.houseManageNo) ? false : (seen.add(a.houseManageNo), true)))
+    .map((a) => ({ name: a.name, moveIn: a.moveIn, households: a.households }))
+    .sort((a, b) => a.moveIn.localeCompare(b.moveIn));
+  const total = items.reduce((s, x) => s + x.households, 0);
+  const perYear = Math.round(total / 3);
+  const years = new Map<number, number>();
+  for (const x of items) years.set(Number(x.moveIn.slice(0, 4)), (years.get(Number(x.moveIn.slice(0, 4))) ?? 0) + x.households);
+  const grade = supplyGrade(perYear);
+  return {
+    grade: {
+      grade,
+      score: 0,
+      max: 0,
+      reasons: [`3년 입주 ${total.toLocaleString("ko-KR")}세대`, `연 ${perYear.toLocaleString("ko-KR")}`],
+    },
+    total,
+    perYear,
+    byYear: [...years.entries()].sort((a, b) => a[0] - b[0]).map(([year, households]) => ({ year, households })),
+    items,
+  };
 }

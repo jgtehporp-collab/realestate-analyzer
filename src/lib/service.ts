@@ -5,6 +5,7 @@ import { demoPois, demoRows } from "./demo";
 import { getBuildingInfo, getKaptInfo } from "./kapt";
 import { envGrade, getLocation, kakaoKey, schoolGrade, vworldKey, type PoiType } from "./location";
 import { fetchRents, fetchTrades, getServiceKey, recentMonths } from "./molit";
+import { upcomingSupply } from "./presale";
 import { findRegion, regionLabel } from "./regions";
 
 export const ANALYSIS_MONTHS = 24;
@@ -91,6 +92,7 @@ async function loadExtras(report: Report): Promise<Extras> {
     building: { state: "ok" },
     map: { state: vworldKey() || kakaoKey() ? "ok" : "nokey" },
     poi: { state: kakaoKey() ? "ok" : "nokey" },
+    supply: { state: "ok" },
   };
 
   const kapt = await getKaptInfo(lawd, complex.umdNm, complex.aptNm).catch((e) => {
@@ -106,7 +108,7 @@ async function loadExtras(report: Report): Promise<Extras> {
   };
 
   if (!kapt) status.building = { state: "notfound", message: "K-apt 법정동코드가 있어야 조회 가능" };
-  const [building, location] = await Promise.all([
+  const [building, location, supply] = await Promise.all([
     kapt
       ? getBuildingInfo(kapt.bjdCode, complex.jibun).catch(fail(status.building))
       : Promise.resolve(null),
@@ -115,13 +117,15 @@ async function loadExtras(report: Report): Promise<Extras> {
       status.poi = { state: "error", message: errMsg(e) };
       return null;
     }),
+    upcomingSupply(lawd).catch(fail(status.supply)),
   ]);
+  if (!supply && status.supply.state === "ok") status.supply = { state: "notfound" };
   if (!building && status.building.state === "ok") status.building = { state: "notfound" };
   if (!location && status.map.state === "ok") {
     status.map = { state: "notfound", message: "주소로 좌표를 찾지 못함" };
     if (status.poi.state === "ok") status.poi = { state: "notfound" };
   }
-  return { kapt, building, location, status };
+  return { kapt, building, location, supply, status };
 }
 
 /** 부가정보로 태그·코멘트 보강 */
@@ -140,5 +144,11 @@ function decorate(report: Report) {
   const st = location?.pois?.filter((p) => p.type === "subway").sort((a, b) => a.distance - b.distance)[0];
   if (st && st.distance <= 500) tags.push("#역세권");
   if (location?.school && (location.school.grade === "S" || location.school.grade === "A")) tags.push("#학군우수");
+  const supply = report.extras.supply;
+  if (supply) {
+    if (supply.grade.grade === "S") tags.push("#공급부족");
+    else if (supply.grade.grade === "C") tags.push("#입주물량많음");
+    extraValue.push(`구 내 향후 3년 입주예정 ${supply.total.toLocaleString("ko-KR")}세대(연 ${supply.perYear.toLocaleString("ko-KR")})`);
+  }
   if (extraValue.length) report.notes.value = `${extraValue.join(", ")}. ${report.notes.value}`;
 }
