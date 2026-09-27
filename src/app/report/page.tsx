@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ReportView from "@/components/ReportView";
 import { getReport } from "@/lib/service";
+import { vworldKey } from "@/lib/location";
 
 type Props = { searchParams: Promise<{ [key: string]: string | string[] | undefined }> };
 
@@ -32,5 +33,5 @@ export default async function ReportPage({ searchParams }: Props) {
       </div>
     );
   }
-  return <ReportView report={report} />;
+  return <ReportView report={report} vworldKey={vworldKey()} />;
 }

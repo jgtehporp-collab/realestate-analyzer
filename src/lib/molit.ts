@@ -1,6 +1,9 @@
 // 국토교통부 아파트 매매/전월세 실거래가 API (data.go.kr) 클라이언트.
 // 서버 전용: DATA_GO_KR_KEY 환경변수가 필요하며 브라우저로 노출되지 않음.
 import "server-only";
+import { callDataGoKr, getServiceKey, num, str, type RawItem } from "./dataGoKr";
+
+export { getServiceKey };
 
 export type TradeRow = {
   aptSeq: string;
@@ -39,10 +42,6 @@ const ENDPOINTS: Record<Kind, string> = {
 const PAGE_SIZE = 1000;
 const HOUR = 60 * 60 * 1000;
 
-export function getServiceKey(): string | null {
-  const key = process.env.DATA_GO_KR_KEY?.trim();
-  return key ? key : null;
-}
 
 /** KST 기준 최근 n개월(이번 달 포함)을 오래된 순서의 YYYYMM 배열로 반환. */
 export function recentMonths(n: number, now = new Date()): string[] {
@@ -61,59 +60,12 @@ export function recentMonths(n: number, now = new Date()): string[] {
   return out.reverse();
 }
 
-const num = (v: unknown) => {
-  const n = Number(String(v ?? "").replace(/,/g, "").trim());
-  return Number.isFinite(n) ? n : 0;
-};
-const str = (v: unknown) => String(v ?? "").trim();
-
-type RawItem = Record<string, unknown>;
-
-function parseXml(text: string): { items: RawItem[]; totalCount: number; resultCode: string; resultMsg: string } {
-  const pick = (tag: string) => text.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1] ?? "";
-  const items: RawItem[] = [];
-  for (const m of text.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
-    const item: RawItem = {};
-    for (const f of m[1].matchAll(/<(\w+)>([^<]*)<\/\1>/g)) item[f[1]] = f[2];
-    items.push(item);
-  }
-  return {
-    items,
-    totalCount: num(pick("totalCount")),
-    resultCode: pick("resultCode") || pick("returnReasonCode"),
-    resultMsg: pick("resultMsg") || pick("returnAuthMsg") || pick("errMsg"),
-  };
-}
-
-async function fetchPage(kind: Kind, lawd: string, ym: string, page: number, key: string) {
-  const serviceKey = key.includes("%") ? key : encodeURIComponent(key);
-  const url =
-    `${ENDPOINTS[kind]}?serviceKey=${serviceKey}&LAWD_CD=${lawd}&DEAL_YMD=${ym}` +
-    `&numOfRows=${PAGE_SIZE}&pageNo=${page}&_type=json`;
-  const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(20_000) });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`실거래가 API HTTP ${res.status}: ${text.slice(0, 120)}`);
-
-  let items: RawItem[];
-  let totalCount: number;
-  let resultCode: string;
-  let resultMsg: string;
-  if (text.trimStart().startsWith("<")) {
-    ({ items, totalCount, resultCode, resultMsg } = parseXml(text));
-  } else {
-    const data = JSON.parse(text);
-    const header = data?.response?.header ?? {};
-    const body = data?.response?.body ?? {};
-    const raw = body.items?.item;
-    items = Array.isArray(raw) ? raw : raw ? [raw] : [];
-    totalCount = num(body.totalCount);
-    resultCode = str(header.resultCode);
-    resultMsg = str(header.resultMsg);
-  }
-  if (resultCode && !/^0+$/.test(resultCode)) {
-    throw new Error(`실거래가 API 오류 (${resultCode}) ${resultMsg}`);
-  }
-  return { items, totalCount };
+async function fetchPage(kind: Kind, lawd: string, ym: string, page: number) {
+  return callDataGoKr(
+    ENDPOINTS[kind],
+    { LAWD_CD: lawd, DEAL_YMD: ym, numOfRows: PAGE_SIZE, pageNo: page },
+    kind === "trade" ? "매매 실거래가 API" : "전월세 실거래가 API",
+  );
 }
 
 function toTrade(it: RawItem, ym: string): TradeRow | null {
@@ -152,12 +104,12 @@ function toRent(it: RawItem, ym: string): RentRow | null {
   };
 }
 
-async function fetchMonthUncached(kind: Kind, lawd: string, ym: string, key: string): Promise<RawItem[]> {
-  const first = await fetchPage(kind, lawd, ym, 1, key);
+async function fetchMonthUncached(kind: Kind, lawd: string, ym: string): Promise<RawItem[]> {
+  const first = await fetchPage(kind, lawd, ym, 1);
   const all = [...first.items];
   const pages = Math.ceil(first.totalCount / PAGE_SIZE);
   for (let p = 2; p <= pages; p++) {
-    const next = await fetchPage(kind, lawd, ym, p, key);
+    const next = await fetchPage(kind, lawd, ym, p);
     all.push(...next.items);
   }
   return all;
@@ -171,13 +123,13 @@ function monthTtl(ym: string): number {
   return recent.includes(ym) ? 3 * HOUR : 24 * HOUR;
 }
 
-function fetchMonth(kind: Kind, lawd: string, ym: string, key: string): Promise<RawItem[]> {
+function fetchMonth(kind: Kind, lawd: string, ym: string): Promise<RawItem[]> {
   const cacheKey = `${kind}:${lawd}:${ym}`;
   const hit = cache.get(cacheKey);
   if (hit && hit.expires > Date.now()) return hit.value;
-  const value = fetchMonthUncached(kind, lawd, ym, key).catch(() =>
+  const value = fetchMonthUncached(kind, lawd, ym).catch(() =>
     // 한 번 재시도
-    fetchMonthUncached(kind, lawd, ym, key),
+    fetchMonthUncached(kind, lawd, ym),
   );
   cache.set(cacheKey, { expires: Date.now() + monthTtl(ym), value });
   value.catch(() => cache.delete(cacheKey));
@@ -209,13 +161,12 @@ async function fetchMonths<T>(
   months: string[],
   convert: (it: RawItem, ym: string) => T | null,
 ): Promise<FetchResult<T>> {
-  const key = getServiceKey();
-  if (!key) throw new Error("DATA_GO_KR_KEY가 설정되지 않았습니다.");
+  if (!getServiceKey()) throw new Error("DATA_GO_KR_KEY가 설정되지 않았습니다.");
   const failedMonths: string[] = [];
   let lastError: unknown = null;
   const perMonth = await mapWithConcurrency(months, 6, async (ym) => {
     try {
-      const items = await fetchMonth(kind, lawd, ym, key);
+      const items = await fetchMonth(kind, lawd, ym);
       return items.map((it) => convert(it, ym)).filter((x): x is T => x !== null);
     } catch (e) {
       lastError = e;

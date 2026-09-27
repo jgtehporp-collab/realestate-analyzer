@@ -68,3 +68,45 @@ export function demoRows(lawd: string, aptNm: string, months: string[]): { trade
   });
   return { trades, rents };
 }
+
+const DEMO_LABELS = {
+  elementary: "초등학교",
+  middle: "중학교",
+  high: "고등학교",
+  subway: "지하철역",
+  mart: "대형마트",
+  hospital: "병원",
+  academy: "학원",
+  park: "공원",
+} as const;
+
+/** 데모용 가상 생활권 (서울시청 주변 좌표에 가상의 시설 배치). */
+export function demoPois(seedText: string) {
+  const rand = rng(hash(`poi:${seedText}`));
+  const lat = 37.5665;
+  const lng = 126.978;
+  const types = [
+    ["elementary", 3],
+    ["middle", 2],
+    ["high", 2],
+    ["subway", 2],
+    ["mart", 2],
+    ["hospital", 6],
+    ["academy", 8],
+    ["park", 3],
+  ] as const;
+  const pois = types.flatMap(([type, n]) =>
+    Array.from({ length: n }, (_, i) => {
+      const r = 150 + rand() * 820;
+      const a = rand() * Math.PI * 2;
+      return {
+        type,
+        name: `(데모) ${DEMO_LABELS[type]} ${i + 1}`,
+        lat: lat + (r * Math.sin(a)) / 111000,
+        lng: lng + (r * Math.cos(a)) / 88000,
+        distance: r,
+      };
+    }),
+  );
+  return { lat, lng, pois };
+}

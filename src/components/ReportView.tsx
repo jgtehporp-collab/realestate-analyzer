@@ -1,5 +1,7 @@
 // 단지 1페이지 간략 분석 리포트. 데스크톱/가로 화면은 3단 한 장, 모바일은 세로 스택.
-import type { BandReport, Report } from "@/lib/analysis";
+import type { BandReport, ExtraStatus, Report } from "@/lib/analysis";
+import type { Grade } from "@/lib/location";
+import MapView from "./MapView";
 import { formatEok, formatPct, formatYm } from "@/lib/format";
 import PriceChart from "./PriceChart";
 import ReportActions from "./ReportActions";
@@ -47,12 +49,54 @@ function NoteBox({ title, color, children }: { title: string; color: string; chi
   );
 }
 
+const STATUS_TEXT: Record<ExtraStatus["state"], string> = {
+  ok: "",
+  nokey: "API 키 설정 전 - 준비 중",
+  notfound: "정보 없음",
+  error: "조회 실패",
+  demo: "데모 모드 - 실데이터 키 설정 후 표시",
+};
+
+function StatusNote({ label, status }: { label: string; status: ExtraStatus }) {
+  if (status.state === "ok") return null;
+  return (
+    <p className="px-3 py-1 text-[10px] text-slate-400" title={status.message}>
+      {label}: {STATUS_TEXT[status.state]}
+      {status.message && status.state !== "nokey" ? ` (${status.message.slice(0, 60)})` : ""}
+    </p>
+  );
+}
+
+const GRADE_COLOR: Record<Grade["grade"], string> = { S: "text-red-600", A: "text-blue-600", B: "text-slate-500", C: "text-slate-400" };
+
+function GradeTile({ label, grade }: { label: string; grade: Grade | null }) {
+  return (
+    <div className="bg-slate-50 px-1 py-2 text-center">
+      <div className="text-xs text-slate-600">{label}</div>
+      {grade ? (
+        <>
+          <div className={`text-3xl font-black leading-tight ${GRADE_COLOR[grade.grade]}`}>{grade.grade}</div>
+          <div className="text-[10px] leading-tight text-slate-500">{grade.reasons.slice(0, 2).join(" · ")}</div>
+        </>
+      ) : (
+        <>
+          <div className="text-2xl font-black text-slate-300">—</div>
+          <div className="text-[10px] text-slate-400">준비 중</div>
+        </>
+      )}
+    </div>
+  );
+}
+
 const signedColor = (x: number | null) => (x === null ? "" : x < -0.005 ? "text-blue-600" : x > 0.005 ? "text-red-600" : "");
 
-export default function ReportView({ report }: { report: Report }) {
+export default function ReportView({ report, vworldKey }: { report: Report; vworldKey: string | null }) {
   const { complex, bands, activity } = report;
   const latestYm = report.months[report.months.length - 1];
   const mapQuery = encodeURIComponent(`${report.regionName} ${complex.aptNm}`);
+  const { kapt, building, location, status } = report.extras;
+  const moveIn = kapt?.useDate ? `${kapt.useDate.slice(0, 4)}.${kapt.useDate.slice(4, 6)}` : complex.buildYear ? `${complex.buildYear}년` : null;
+  const topFloor = kapt?.topFloor ?? complex.maxFloor;
 
   return (
     <div className="mx-auto max-w-[1400px] p-2 lg:p-3 print:max-w-none print:p-0">
@@ -78,8 +122,10 @@ export default function ReportView({ report }: { report: Report }) {
           </div>
           <p className="text-sm text-slate-200">
             {[
-              complex.buildYear && `입주 ${complex.buildYear}년`,
-              complex.maxFloor && `최고 ${complex.maxFloor}층`,
+              kapt?.households && `${kapt.households.toLocaleString("ko-KR")}세대`,
+              moveIn && `입주 ${moveIn}`,
+              kapt?.hallType,
+              topFloor && `최고 ${topFloor}층`,
               `${formatYm(report.months[0])}~${formatYm(latestYm)} 실거래`,
             ]
               .filter(Boolean)
@@ -92,15 +138,24 @@ export default function ReportView({ report }: { report: Report }) {
           <div className="order-3 flex flex-col gap-2 lg:order-none">
             <Card title="단지 정보">
               <div className="grid grid-cols-2 gap-px bg-slate-200">
-                <Cell label="입주" value={complex.buildYear ? `${complex.buildYear}년 (${complex.age}년차)` : "—"} />
-                <Cell label="최고층 (거래 기준)" value={complex.maxFloor ? `${complex.maxFloor}층` : "—"} />
-                <Cell label="법정동" value={`${complex.umdNm} ${complex.jibun}`} />
-                <Cell label="단지코드" value={complex.id.startsWith("s:") ? complex.id.slice(2) : "—"} />
+                <Cell label="세대수" value={kapt?.households ? `${kapt.households.toLocaleString("ko-KR")}세대${kapt.dongCount ? ` (${kapt.dongCount}동)` : ""}` : "—"} />
+                <Cell label="입주" value={moveIn ? `${moveIn} (${complex.age}년차)` : "—"} />
+                <Cell label={kapt?.topFloor ? "최고층" : "최고층 (거래 기준)"} value={topFloor ? `${topFloor}층` : "—"} />
+                <Cell
+                  label="건폐율 / 용적률"
+                  value={building ? `${building.coverageRatio?.toFixed(0) ?? "—"}% / ${building.floorAreaRatio?.toFixed(0) ?? "—"}%` : "—"}
+                />
+                <Cell label="구조" value={kapt?.hallType ?? "—"} />
+                <Cell label="주차 (세대당)" value={kapt?.parkingPerHousehold ? `${kapt.parkingPerHousehold.toFixed(2)}대` : "—"} />
+                <Cell label="시공사" value={kapt?.builder ?? "—"} />
+                <Cell label="지하철" value={kapt?.subway ? `${kapt.subway}${kapt.subwayWalk ? ` (${kapt.subwayWalk})` : ""}` : "—"} />
                 <div className="col-span-2 bg-slate-50 px-3 py-1.5">
                   <div className="text-[11px] text-slate-500">거래된 전용면적(㎡)</div>
                   <div className="text-xs font-semibold">{complex.areas.join(" · ") || "—"}</div>
                 </div>
               </div>
+              <StatusNote label="K-apt" status={status.kapt} />
+              <StatusNote label="건축물대장" status={status.building} />
             </Card>
 
             <Card title="거래 활성도">
@@ -114,27 +169,31 @@ export default function ReportView({ report }: { report: Report }) {
 
             <Card title="환경 / 학군 / 공급">
               <div className="grid grid-cols-3 gap-px bg-slate-200">
-                {["환경", "학군", "공급"].map((k) => (
-                  <div key={k} className="bg-slate-50 py-2 text-center">
-                    <div className="text-xs text-slate-600">{k}</div>
-                    <div className="text-2xl font-black text-slate-300">—</div>
-                    <div className="text-[10px] text-slate-400">준비 중</div>
-                  </div>
-                ))}
+                <GradeTile label="환경" grade={location?.env ?? null} />
+                <GradeTile label="학군" grade={location?.school ?? null} />
+                <GradeTile label="공급" grade={null} />
               </div>
+              <StatusNote label="주변시설(카카오)" status={status.poi} />
             </Card>
 
             <Card title="특징 태그">
               <p className="px-3 py-2 text-sm font-semibold leading-relaxed text-accent">{report.tags.join("  ")}</p>
             </Card>
 
-            <Card title="위치" className="flex-1">
-              <div className="flex gap-2 p-3">
+            <Card title="생활권 지도 (반경 1km)" className="flex flex-1 flex-col">
+              {location ? (
+                <div className="h-[320px] lg:h-auto lg:min-h-[300px] lg:flex-1">
+                  <MapView lat={location.lat} lng={location.lng} pois={location.pois} vworldKey={vworldKey} title={complex.aptNm} />
+                </div>
+              ) : (
+                <StatusNote label="지도" status={status.map} />
+              )}
+              <div className="no-print flex gap-2 px-3 py-2">
                 <a
                   href={`https://map.naver.com/p/search/${mapQuery}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex-1 rounded bg-green-600 py-2 text-center text-xs font-bold text-white"
+                  className="flex-1 rounded bg-green-600 py-1.5 text-center text-xs font-bold text-white"
                 >
                   네이버 지도
                 </a>
@@ -142,12 +201,11 @@ export default function ReportView({ report }: { report: Report }) {
                   href={`https://map.kakao.com/?q=${mapQuery}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex-1 rounded bg-yellow-400 py-2 text-center text-xs font-bold text-slate-900"
+                  className="flex-1 rounded bg-yellow-400 py-1.5 text-center text-xs font-bold text-slate-900"
                 >
                   카카오맵
                 </a>
               </div>
-              <p className="px-3 pb-3 text-[11px] text-slate-400">생활권 지도(반경 1km 학교·역·편의시설)는 다음 단계에서 추가 예정</p>
             </Card>
           </div>
 
