@@ -6,6 +6,7 @@ import {
   getModels,
   getScores,
   listAnnouncements,
+  type AnnKind,
   type Announcement,
   type Competition,
   type HouseModel,
@@ -126,7 +127,7 @@ export function marketFor(area: number, trades: TradeRow[], thisYear: number): M
   return null;
 }
 
-export async function getPresaleDetail(houseManageNo: string): Promise<PresaleDetail | null> {
+export async function getPresaleDetail(houseManageNo: string, kind: AnnKind = "apt"): Promise<PresaleDetail | null> {
   const today = kstToday();
   const thisYear = Number(today.slice(0, 4));
   const errors: string[] = [];
@@ -145,7 +146,7 @@ export async function getPresaleDetail(houseManageNo: string): Promise<PresaleDe
     };
   }
 
-  const announcement = await getAnnouncement(houseManageNo);
+  const announcement = await getAnnouncement(houseManageNo, kind);
   if (!announcement) return null;
   const lawd = lawdFromAddress(announcement.address);
   const soft = <T,>(p: Promise<T[]>, what: string) =>
@@ -154,9 +155,9 @@ export async function getPresaleDetail(houseManageNo: string): Promise<PresaleDe
       return [] as T[];
     });
   const [models, competition, scores, trades] = await Promise.all([
-    soft(getModels(houseManageNo), "주택형"),
-    soft(getCompetition(houseManageNo), "경쟁률"),
-    soft(getScores(houseManageNo), "당첨가점"),
+    soft(getModels(houseManageNo, kind), "주택형"),
+    soft(getCompetition(houseManageNo, kind), "경쟁률"),
+    kind === "apt" ? soft(getScores(houseManageNo), "당첨가점") : Promise.resolve([] as Score[]),
     lawd ? soft(fetchTrades(lawd, recentMonths(12)).then((r) => r.rows), "인근 실거래") : Promise.resolve([] as TradeRow[]),
   ]);
   if (!lawd) errors.push("인근 실거래: 지원 지역(구) 밖이라 비교 불가");
@@ -172,7 +173,13 @@ export async function getPresaleDetail(houseManageNo: string): Promise<PresaleDe
 function combine(models: HouseModel[], competition: Competition[], scores: Score[], trades: TradeRow[], thisYear: number): ModelRow[] {
   const isLocal = (reside: string) => reside.includes("해당");
   return models.map((m) => {
-    const c = competition.find((x) => x.modelNo === m.modelNo && x.rank === "1" && isLocal(x.reside));
+    // 무순위·임의공급 경쟁률은 모델번호·순위·거주구분 없이 주택형 단위로 옴
+    const c = competition.find(
+      (x) =>
+        (x.modelNo ? x.modelNo === m.modelNo : x.houseType === m.houseType) &&
+        (!x.rank || x.rank === "1") &&
+        (!x.reside || isLocal(x.reside)),
+    );
     const s = scores.find((x) => x.modelNo === m.modelNo && isLocal(x.reside));
     const market = m.area ? marketFor(m.area, trades, thisYear) : null;
     const margin = market && m.topPrice ? market.median - m.topPrice : null;
@@ -237,4 +244,65 @@ export async function upcomingSupply(lawd: string): Promise<SupplyInfo | null> {
     byYear: [...years.entries()].sort((a, b) => a[0] - b[0]).map(([year, households]) => ({ year, households })),
     items,
   };
+}
+
+export type HotItem = PresaleListItem & { reasons: string[]; score: number };
+
+/** 서울·경기 "줍줍"(무순위·재공급·임의공급) + 주목 분양(상한제·대단지 등) 중 청약예정·접수중 최대 10개 */
+export async function getHotPresales(limit = 10): Promise<{ demo: boolean; items: HotItem[] }> {
+  const today = kstToday();
+  if (!getServiceKey()) {
+    const demo = demoAnnouncements("서울특별시 강남구").map((a, i) => ({
+      ...a,
+      ...(i === 0 ? { kind: "remndr" as const, kindLabel: "무순위" } : {}),
+      status: presaleStatus(a, today),
+    }));
+    return {
+      demo: true,
+      items: demo.filter((a) => a.status === "청약예정" || a.status === "접수중").map((a) => ({ ...a, reasons: [a.kindLabel], score: 1 })),
+    };
+  }
+  const since = new Date(Date.now() + 9 * 3600e3 - 90 * 86400e3).toISOString().slice(0, 10);
+  const regions = [
+    { keyword: "서울", p: PROVINCES[0] },
+    { keyword: "경기", p: PROVINCES[1] },
+  ];
+  const kinds: AnnKind[] = ["remndr", "opt", "apt"];
+  const jobs = regions.flatMap((r) => kinds.map((k) => listAnnouncements(r.keyword, since, k).then((l) => l.filter((a) => inProvince(a.address, r.p))).catch(() => [] as Announcement[])));
+  const all = (await Promise.all(jobs)).flat();
+
+  const live = all
+    .map((a) => ({ ...a, status: presaleStatus(a, today) }))
+    .filter((a) => a.status === "청약예정" || a.status === "접수중");
+  const seen = new Set<string>();
+  const scored: HotItem[] = [];
+  for (const a of live) {
+    const key = `${a.kind}:${a.houseManageNo}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const reasons: string[] = [];
+    let score = 0;
+    if (a.kind !== "apt") {
+      reasons.push(a.kindLabel === "무순위" ? "줍줍(무순위)" : a.kindLabel);
+      score += 5;
+    }
+    if (a.priceCap) {
+      reasons.push("분양가상한제");
+      score += 3;
+    }
+    if (a.address.startsWith("서울")) score += 1;
+    if (a.overheated) {
+      reasons.push("투기과열지구");
+      score += 1;
+    }
+    if (a.households >= 1000) {
+      reasons.push("대단지");
+      score += 1;
+    }
+    if (a.status === "접수중") score += 0.5;
+    if (!reasons.length) reasons.push(a.kind === "apt" ? "일반분양" : a.kindLabel);
+    scored.push({ ...a, reasons, score });
+  }
+  scored.sort((x, y) => y.score - x.score || (x.receiptStart || x.noticeDate).localeCompare(y.receiptStart || y.noticeDate));
+  return { demo: false, items: scored.slice(0, limit) };
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import StatusBadge from "@/components/StatusBadge";
+import { isAnnKind } from "@/lib/applyhome";
 import { formatEok, formatPct } from "@/lib/format";
 import { getPresaleDetail, type ModelRow, type PresaleDetail } from "@/lib/presale";
 
@@ -10,12 +11,20 @@ export const metadata: Metadata = { title: "분양 상세 | 부동산 분석" };
 const dot = (d: string) => (d ? d.replaceAll("-", ".") : "—");
 const range = (a: string, b: string) => (a ? (b && b !== a ? `${dot(a)} ~ ${dot(b).slice(5)}` : dot(a)) : "—");
 
-export default async function PresaleDetailPage({ params }: { params: Promise<{ no: string }> }) {
+export default async function PresaleDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ no: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const { no } = await params;
+  const k = (await searchParams).kind;
+  const kind = typeof k === "string" && isAnnKind(k) ? k : "apt";
   let detail: PresaleDetail | null = null;
   let error: string | null = null;
   try {
-    detail = await getPresaleDetail(decodeURIComponent(no));
+    detail = await getPresaleDetail(decodeURIComponent(no), kind);
   } catch (e) {
     error = e instanceof Error ? e.message : "조회 실패";
   }
@@ -96,6 +105,7 @@ export default async function PresaleDetailPage({ params }: { params: Promise<{ 
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-extrabold tracking-tight lg:text-3xl">{a.name}</h1>
               <StatusBadge status={a.status} />
+              {a.kind !== "apt" && <span className="rounded bg-red-600 px-1.5 py-0.5 text-[11px] font-bold">{a.kindLabel}</span>}
             </div>
             <p className="text-xs text-slate-300">{a.address}</p>
           </div>
