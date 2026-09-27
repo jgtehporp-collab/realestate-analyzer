@@ -9,10 +9,10 @@ import { findRegion, regionLabel } from "./regions";
 
 export const ANALYSIS_MONTHS = 24;
 export const EXTENDED_MONTHS = 36;
-/** 자동 모드에서 가장 거래가 많은 평형대의 매매가 이 건수 미만이면 36개월로 확장 (2개월에 1건 미만) */
+/** 자동 모드에서 차트에 표시되는 평형대 중 하나라도 매매가 이 건수 미만이면 36개월로 확장 (2개월에 1건 미만) */
 const SPARSE_TRADES = 12;
 
-const isSparse = (r: Report) => Math.max(0, ...r.bands.map((b) => b.tradeCount)) < SPARSE_TRADES;
+const isSparse = (r: Report) => r.bands.length === 0 || r.bands.some((b) => b.tradeCount < SPARSE_TRADES);
 const SEARCH_MONTHS = 12;
 
 export const isDemo = () => !getServiceKey();
