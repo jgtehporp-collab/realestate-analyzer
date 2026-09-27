@@ -5,9 +5,9 @@ import { callDataGoKr, num, str, type RawItem } from "./dataGoKr";
 import { normalizeName } from "./analysis";
 import { DAY, memo } from "./memo";
 
-const APT_LIST = "https://apis.data.go.kr/1613000/AptListService3/getSigunguAptList3";
-const APT_BASIC = "https://apis.data.go.kr/1613000/AptBasisInfoServiceV4/getAphusBassInfoV4";
-const APT_DETAIL = "https://apis.data.go.kr/1613000/AptBasisInfoServiceV4/getAphusDtlInfoV4";
+const APT_LIST = "https://apis.data.go.kr/1613000/AptListService4/getSigunguAptList4";
+const APT_BASIC = "https://apis.data.go.kr/1613000/AptBasisInfoServiceV5/getAphusBassInfoV5";
+const APT_DETAIL = "https://apis.data.go.kr/1613000/AptBasisInfoServiceV5/getAphusDtlInfoV5";
 const BLD_RECAP = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrRecapTitleInfo";
 const BLD_TITLE = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo";
 
