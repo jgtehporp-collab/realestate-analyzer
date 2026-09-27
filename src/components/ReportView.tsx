@@ -97,6 +97,13 @@ export default function ReportView({ report, vworldKey, requestId }: { report: R
   const { kapt, building, location, status } = report.extras;
   const moveIn = kapt?.useDate ? `${kapt.useDate.slice(0, 4)}.${kapt.useDate.slice(4, 6)}` : complex.buildYear ? `${complex.buildYear}년` : null;
   const topFloor = kapt?.topFloor ?? complex.maxFloor;
+  // K-apt에 지하철 정보가 없으면 카카오 주변 검색의 가장 가까운 역으로 대체
+  const nearestStation = location?.pois?.filter((p) => p.type === "subway").sort((a, b) => a.distance - b.distance)[0];
+  const subwayText = kapt?.subway
+    ? `${kapt.subway}${kapt.subwayWalk ? ` (${kapt.subwayWalk})` : ""}`
+    : nearestStation
+      ? `${nearestStation.name} ${Math.round(nearestStation.distance)}m`
+      : "—";
 
   return (
     <div className="mx-auto max-w-[1400px] p-2 lg:p-3 print:max-w-none print:p-0">
@@ -109,7 +116,7 @@ export default function ReportView({ report, vworldKey, requestId }: { report: R
       )}
       {report.period.extended && (
         <p className="no-print mb-2 rounded bg-sky-50 px-3 py-2 text-xs text-sky-800">
-          최근 24개월 매매가 적어(주력 평형 12건 미만) 분석 기간을 36개월로 자동 확장했습니다.
+          최근 24개월 매매가 적은 평형이 있어(12건 미만) 분석 기간을 36개월로 자동 확장했습니다.
         </p>
       )}
       {report.failedMonths.length > 0 && (
@@ -153,7 +160,7 @@ export default function ReportView({ report, vworldKey, requestId }: { report: R
                 <Cell label="구조" value={kapt?.hallType ?? "—"} />
                 <Cell label="주차 (세대당)" value={kapt?.parkingPerHousehold ? `${kapt.parkingPerHousehold.toFixed(2)}대` : "—"} />
                 <Cell label="시공사" value={kapt?.builder ?? "—"} />
-                <Cell label="지하철" value={kapt?.subway ? `${kapt.subway}${kapt.subwayWalk ? ` (${kapt.subwayWalk})` : ""}` : "—"} />
+                <Cell label="지하철" value={subwayText} />
                 <div className="col-span-2 bg-slate-50 px-3 py-1.5">
                   <div className="text-[11px] text-slate-500">거래된 전용면적(㎡)</div>
                   <div className="text-xs font-semibold">{complex.areas.join(" · ") || "—"}</div>
