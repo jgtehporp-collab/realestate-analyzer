@@ -90,7 +90,7 @@ function GradeTile({ label, grade }: { label: string; grade: Grade | null }) {
 
 const signedColor = (x: number | null) => (x === null ? "" : x < -0.005 ? "text-blue-600" : x > 0.005 ? "text-red-600" : "");
 
-export default function ReportView({ report, vworldKey }: { report: Report; vworldKey: string | null }) {
+export default function ReportView({ report, vworldKey, requestId }: { report: Report; vworldKey: string | null; requestId: string }) {
   const { complex, bands, activity } = report;
   const latestYm = report.months[report.months.length - 1];
   const mapQuery = encodeURIComponent(`${report.regionName} ${complex.aptNm}`);
@@ -100,11 +100,16 @@ export default function ReportView({ report, vworldKey }: { report: Report; vwor
 
   return (
     <div className="mx-auto max-w-[1400px] p-2 lg:p-3 print:max-w-none print:p-0">
-      <ReportActions />
+      <ReportActions lawd={report.lawd} id={requestId} period={report.period} />
 
       {report.demo && (
         <p className="no-print mb-2 rounded bg-amber-50 px-3 py-2 text-xs text-amber-800">
           데모 데이터입니다. 서버 환경변수 DATA_GO_KR_KEY(공공데이터포털 실거래가 API 키)를 설정하면 실제 거래로 분석합니다.
+        </p>
+      )}
+      {report.period.extended && (
+        <p className="no-print mb-2 rounded bg-sky-50 px-3 py-2 text-xs text-sky-800">
+          최근 24개월 매매가 적어(주력 평형 12건 미만) 분석 기간을 36개월로 자동 확장했습니다.
         </p>
       )}
       {report.failedMonths.length > 0 && (
@@ -126,7 +131,7 @@ export default function ReportView({ report, vworldKey }: { report: Report; vwor
               moveIn && `입주 ${moveIn}`,
               kapt?.hallType,
               topFloor && `최고 ${topFloor}층`,
-              `${formatYm(report.months[0])}~${formatYm(latestYm)} 실거래`,
+              `${formatYm(report.months[0])}~${formatYm(latestYm)} 실거래 (${report.period.months}개월)`,
             ]
               .filter(Boolean)
               .join("  |  ")}
