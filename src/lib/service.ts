@@ -1,6 +1,6 @@
 // 페이지/API 라우트가 쓰는 진입점. API 키가 없으면 데모 데이터로 대체.
 import "server-only";
-import { buildReport, complexId, searchComplexes, type Complex, type ExtraStatus, type Extras, type Report } from "./analysis";
+import { buildReport, complexId, searchComplexes, type Complex, type ExtraStatus, type Extras, type PeriodMode, type Report } from "./analysis";
 import { demoPois, demoRows } from "./demo";
 import { getBuildingInfo, getKaptInfo } from "./kapt";
 import { envGrade, getLocation, kakaoKey, schoolGrade, vworldKey, type PoiType } from "./location";
@@ -8,6 +8,11 @@ import { fetchRents, fetchTrades, getServiceKey, recentMonths } from "./molit";
 import { findRegion, regionLabel } from "./regions";
 
 export const ANALYSIS_MONTHS = 24;
+export const EXTENDED_MONTHS = 36;
+/** 자동 모드에서 가장 거래가 많은 평형대의 매매가 이 건수 미만이면 36개월로 확장 (2개월에 1건 미만) */
+const SPARSE_TRADES = 12;
+
+const isSparse = (r: Report) => Math.max(0, ...r.bands.map((b) => b.tradeCount)) < SPARSE_TRADES;
 const SEARCH_MONTHS = 12;
 
 export const isDemo = () => !getServiceKey();
@@ -32,9 +37,30 @@ export async function findComplexes(lawd: string, query: string): Promise<{ demo
   return { demo: false, complexes: searchComplexes(rows, query) };
 }
 
-export async function getReport(lawd: string, id: string): Promise<Report | null> {
+export async function getReport(lawd: string, id: string, mode: PeriodMode = "auto"): Promise<Report | null> {
   if (!findRegion(lawd)) throw new Error("지원하지 않는 지역 코드입니다.");
-  const months = recentMonths(ANALYSIS_MONTHS);
+  const first = mode === "36" ? EXTENDED_MONTHS : ANALYSIS_MONTHS;
+  let report = await buildForPeriod(lawd, id, first);
+  let extended = false;
+  if (report && mode === "auto" && isSparse(report)) {
+    // 이미 받은 24개월은 캐시에서 재사용되고 앞쪽 12개월만 추가 조회
+    const longer = await buildForPeriod(lawd, id, EXTENDED_MONTHS);
+    if (longer) {
+      report = longer;
+      extended = true;
+    }
+  }
+  if (!report) return null;
+  report.period = { months: report.months.length, mode, extended };
+  if (!report.demo) {
+    report.extras = await loadExtras(report);
+    decorate(report);
+  }
+  return report;
+}
+
+async function buildForPeriod(lawd: string, id: string, n: number): Promise<Report | null> {
+  const months = recentMonths(n);
   const regionName = regionLabel(lawd);
 
   if (isDemo()) {
@@ -52,11 +78,7 @@ export async function getReport(lawd: string, id: string): Promise<Report | null
 
   const [t, r] = await Promise.all([fetchTrades(lawd, months), fetchRents(lawd, months)]);
   const failedMonths = [...new Set([...t.failedMonths, ...r.failedMonths])].sort();
-  const report = buildReport({ demo: false, lawd, regionName, id, months, trades: t.rows, rents: r.rows, failedMonths });
-  if (!report) return null;
-  report.extras = await loadExtras(report);
-  decorate(report);
-  return report;
+  return buildReport({ demo: false, lawd, regionName, id, months, trades: t.rows, rents: r.rows, failedMonths });
 }
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));

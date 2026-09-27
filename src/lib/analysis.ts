@@ -83,8 +83,12 @@ export type Report = {
   tags: string[];
   notes: { value: string; price: string; invest: string };
   extras: Extras;
+  period: ReportPeriod;
   generatedAt: string;
 };
+
+export type PeriodMode = "auto" | "24" | "36";
+export type ReportPeriod = { months: number; mode: PeriodMode; extended: boolean };
 
 export const normalizeName = (s: string) =>
   s.replace(/\s+/g, "").replace(/[()（）\-·.,]/g, "").toLowerCase();
@@ -359,6 +363,7 @@ export function buildReport(input: {
     },
     months,
     failedMonths: input.failedMonths,
+    period: { months: months.length, mode: "24", extended: false },
     activity: {
       trades3m,
       tradesTotal: trades.length,
