@@ -16,6 +16,7 @@ export type TradeRow = {
   floor: number;
   ym: string; // YYYYMM
   day: number;
+  direct?: boolean; // 직거래 여부 (중개거래 아님)
 };
 
 export type RentRow = {
@@ -83,6 +84,7 @@ function toTrade(it: RawItem, ym: string): TradeRow | null {
     floor: num(it.floor),
     ym,
     day: num(it.dealDay),
+    direct: str(it.dealingGbn) === "직거래",
   };
 }
 

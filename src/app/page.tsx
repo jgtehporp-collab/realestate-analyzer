@@ -1,4 +1,5 @@
 import { connection } from "next/server";
+import HotTrades from "@/components/HotTrades";
 import SearchForm from "@/components/SearchForm";
 import { connectionStatus } from "@/lib/service";
 
@@ -12,7 +13,11 @@ export default async function Home() {
   await connection(); // 환경변수 상태를 요청 시점에 읽도록
   const status = connectionStatus();
   return (
-    <>
+    <div className="mx-auto grid max-w-6xl gap-4 px-0 lg:grid-cols-[340px_1fr] lg:px-4 lg:py-6">
+      <aside className="order-2 px-4 lg:order-none lg:sticky lg:top-16 lg:self-start lg:px-0">
+        <HotTrades />
+      </aside>
+      <div className="order-1 min-w-0 lg:order-none">
       <SearchForm />
       <section className="mx-auto max-w-2xl px-4 pb-10">
         <h2 className="text-xs font-bold text-slate-500">데이터 연결 상태</h2>
@@ -27,6 +32,7 @@ export default async function Home() {
           ))}
         </ul>
       </section>
-    </>
+      </div>
+    </div>
   );
 }

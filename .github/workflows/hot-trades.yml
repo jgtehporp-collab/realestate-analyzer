@@ -1,0 +1,36 @@
+name: 급등·급락 단지 갱신
+
+on:
+  schedule:
+    - cron: "40 21 * * *" # 매일 06:40 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 급등·급락 계산
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+        run: npm run hot:build
+      - name: 변경 시 커밋
+        run: |
+          if git diff --quiet src/data/hot-trades.json; then
+            echo "변경 없음"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/hot-trades.json
+          git commit -m "chore: 급등·급락 단지 갱신 ($(TZ=Asia/Seoul date +%F))"
+          git push
