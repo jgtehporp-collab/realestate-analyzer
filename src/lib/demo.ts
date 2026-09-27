@@ -1,4 +1,5 @@
 // API 키가 없을 때 화면 확인용으로 쓰는 결정적(같은 입력 → 같은 결과) 가상 실거래 데이터.
+import type { Announcement, Competition, HouseModel, Score } from "./applyhome";
 import type { RentRow, TradeRow } from "./molit";
 
 function hash(s: string): number {
@@ -109,4 +110,67 @@ export function demoPois(seedText: string) {
     }),
   );
   return { lat, lng, pois };
+}
+
+// ---- 분양 탭 데모 (키 없을 때) ----
+
+function shiftDate(days: number): string {
+  return new Date(Date.now() + 9 * 3600e3 + days * 86400e3).toISOString().slice(0, 10);
+}
+
+function demoAnnouncement(no: string, name: string, address: string, offset: number): Announcement {
+  return {
+    houseManageNo: no,
+    pblancNo: no,
+    name,
+    houseType: "APT",
+    saleType: "민영",
+    address,
+    households: 480,
+    noticeDate: shiftDate(offset - 10),
+    specialStart: shiftDate(offset),
+    specialEnd: shiftDate(offset),
+    receiptStart: shiftDate(offset),
+    receiptEnd: shiftDate(offset + 2),
+    rank1Local: shiftDate(offset + 1),
+    winnerDate: shiftDate(offset + 9),
+    contractStart: shiftDate(offset + 20),
+    contractEnd: shiftDate(offset + 22),
+    moveIn: "202905",
+    builder: "데모건설",
+    developer: "데모시행",
+    homepage: "",
+    url: "https://www.applyhome.co.kr",
+    overheated: false,
+    adjusted: false,
+    priceCap: offset > 0,
+    redevelopment: offset < 0,
+    publicZone: false,
+  };
+}
+
+export function demoAnnouncements(label: string): Announcement[] {
+  const addr = label.startsWith("서울") || label.startsWith("경기") ? label : `${label} 데모동 1`;
+  return [
+    demoAnnouncement("DEMO-1", "(데모) 리버파크 자이", `${addr} 데모동 1`, 7),
+    demoAnnouncement("DEMO-2", "(데모) 센트럴 푸르지오", `${addr} 데모동 2`, -1),
+    demoAnnouncement("DEMO-3", "(데모) 더샵 퍼스트", `${addr} 데모동 3`, -60),
+  ];
+}
+
+export function demoPresaleDetail(no: string) {
+  const a = demoAnnouncements("서울특별시 강남구").find((x) => x.houseManageNo === no);
+  if (!a) return null;
+  const models: HouseModel[] = [
+    { modelNo: "01", houseType: "059.9800A", area: 59.98, supplyArea: 84.2, general: 120, special: 90, topPrice: 105000 },
+    { modelNo: "02", houseType: "084.9700A", area: 84.97, supplyArea: 112.5, general: 150, special: 70, topPrice: 139000 },
+    { modelNo: "03", houseType: "114.9300A", area: 114.93, supplyArea: 148.1, general: 50, special: 0, topPrice: 185000 },
+  ];
+  const competition: Competition[] = a.houseManageNo === "DEMO-3"
+    ? models.map((m, i) => ({ modelNo: m.modelNo, houseType: m.houseType, rank: "1", reside: "해당지역", supply: m.general, requests: m.general * (40 + i * 25), rate: String(40 + i * 25) }))
+    : [];
+  const scores: Score[] = a.houseManageNo === "DEMO-3"
+    ? models.map((m, i) => ({ modelNo: m.modelNo, houseType: m.houseType, reside: "해당지역", low: 58 + i * 3, avg: 64 + i * 2, high: 74 + i }))
+    : [];
+  return { announcement: a, models, competition, scores };
 }
