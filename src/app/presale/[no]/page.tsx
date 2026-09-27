@@ -38,6 +38,16 @@ export default async function PresaleDetailPage({ params }: { params: Promise<{ 
   const best = withMargin.reduce<ModelRow | null>((x, m) => (!x || (m.marginPct ?? -9) > (x.marginPct ?? -9) ? m : x), null);
   const main = [...models].sort((x, y) => y.general + y.special - (x.general + x.special))[0];
 
+  // 비교 단지가 같은 주택형(예: 059A·059B)은 한 카드로 묶음
+  const compareGroups: { types: string[]; market: NonNullable<ModelRow["market"]> }[] = [];
+  for (const m of models) {
+    if (!m.market?.comparables.length) continue;
+    const key = JSON.stringify(m.market.comparables);
+    const g = compareGroups.find((x) => JSON.stringify(x.market.comparables) === key);
+    if (g) g.types.push(m.houseType);
+    else compareGroups.push({ types: [m.houseType], market: m.market });
+  }
+
   const flags = [
     a.priceCap && "분양가상한제",
     a.overheated && "투기과열지구",
@@ -181,6 +191,11 @@ export default async function PresaleDetailPage({ params }: { params: Promise<{ 
                         <td className={`border border-slate-200 px-2 py-1.5 font-bold ${m.margin === null ? "" : m.margin >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                           {m.margin === null ? (
                             "—"
+                          ) : Math.abs(m.margin) < 500 ? (
+                            <span className="text-slate-600">
+                              시세 수준
+                              <div className="text-[10px]">{formatPct(m.marginPct, 0, true)}</div>
+                            </span>
                           ) : (
                             <>
                               {m.margin >= 0 ? "+" : ""}
@@ -203,25 +218,23 @@ export default async function PresaleDetailPage({ params }: { params: Promise<{ 
               <h3 className="bg-navy px-3 py-1 text-[13px] font-bold text-white">비교 단지 (인근 신축 실거래)</h3>
               {models.some((m) => m.market?.comparables.length) ? (
                 <div className="grid gap-px bg-slate-200 sm:grid-cols-2">
-                  {models
-                    .filter((m) => m.market?.comparables.length)
-                    .map((m) => (
-                      <div key={m.modelNo} className="bg-white px-3 py-2 text-xs">
-                        <div className="font-bold">
-                          {m.houseType} <span className="font-normal text-slate-500">({m.market!.basis})</span>
-                        </div>
-                        {m.market!.comparables.map((c) => (
-                          <div key={c.aptNm} className="mt-0.5 flex justify-between">
-                            <span>
-                              {c.aptNm} <span className="text-slate-400">{c.buildYear}년</span>
-                            </span>
-                            <span className="font-semibold">
-                              {formatEok(c.median)} <span className="font-normal text-slate-400">({c.count}건)</span>
-                            </span>
-                          </div>
-                        ))}
+                  {compareGroups.map((g) => (
+                    <div key={g.types.join()} className="bg-white px-3 py-2 text-xs">
+                      <div className="font-bold">
+                        {g.types.join(" · ")} <span className="font-normal text-slate-500">({g.market.basis})</span>
                       </div>
-                    ))}
+                      {g.market.comparables.map((c) => (
+                        <div key={c.aptNm} className="mt-0.5 flex justify-between">
+                          <span>
+                            {c.aptNm} <span className="text-slate-400">{c.buildYear}년</span>
+                          </span>
+                          <span className="font-semibold">
+                            {formatEok(c.median)} <span className="font-normal text-slate-400">({c.count}건)</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <p className="p-3 text-xs text-slate-500">비교할 인근 신축 거래가 없습니다.</p>

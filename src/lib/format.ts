@@ -18,6 +18,7 @@ export function formatEokShort(manwon: number): string {
 export function formatPct(x: number | null | undefined, digits = 1, signed = false): string {
   if (x === null || x === undefined || !Number.isFinite(x)) return "—";
   const s = (x * 100).toFixed(digits);
+  if (Number(s) === 0) return `${(0).toFixed(digits)}%`; // "-0%" 방지
   return `${signed && x > 0 ? "+" : ""}${s}%`;
 }
 
