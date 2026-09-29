@@ -4,6 +4,7 @@ import type { Grade } from "@/lib/location";
 import MapView from "./MapView";
 import { formatEok, formatPct, formatYm } from "@/lib/format";
 import PriceChart from "./PriceChart";
+import RecordRecent from "./RecordRecent";
 import ReportActions from "./ReportActions";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -107,6 +108,7 @@ export default function ReportView({ report, vworldKey, requestId }: { report: R
 
   return (
     <div className="mx-auto max-w-[1400px] p-2 lg:p-3 print:max-w-none print:p-0">
+      <RecordRecent lawd={report.lawd} id={requestId} name={complex.aptNm} />
       <ReportActions lawd={report.lawd} id={requestId} period={report.period} />
 
       {report.demo && (
