@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-27T21:54:35.204Z",
+  "generatedAt": "2026-09-29T00:18:49.246Z",
   "basis": "2026.07~2026.09 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층 제외)",
   "up": [
     {
@@ -35,22 +35,6 @@
       "lastYm": "202608"
     },
     {
-      "lawd": "41173",
-      "region": "경기 안양시 동안구",
-      "id": "s:41173-15",
-      "aptNm": "샛별마을한양4-1",
-      "umdNm": "비산동",
-      "band": "20평대",
-      "area": 42.615,
-      "baseMedian": 46472,
-      "recentMedian": 60930,
-      "change": 0.3111111111111111,
-      "baseCount": 51,
-      "recentCount": 13,
-      "newHigh": true,
-      "lastYm": "202609"
-    },
-    {
       "lawd": "41111",
       "region": "경기 수원시 장안구",
       "id": "s:41111-105",
@@ -81,9 +65,41 @@
       "recentCount": 39,
       "newHigh": true,
       "lastYm": "202609"
+    },
+    {
+      "lawd": "41173",
+      "region": "경기 안양시 동안구",
+      "id": "s:41173-15",
+      "aptNm": "샛별마을한양4-1",
+      "umdNm": "비산동",
+      "band": "20평대",
+      "area": 42.615,
+      "baseMedian": 46472,
+      "recentMedian": 60465,
+      "change": 0.30110289804059587,
+      "baseCount": 51,
+      "recentCount": 14,
+      "newHigh": true,
+      "lastYm": "202609"
     }
   ],
   "down": [
+    {
+      "lawd": "11230",
+      "region": "서울 동대문구",
+      "id": "s:11230-2647",
+      "aptNm": "동대문푸르지오시티(도시형생활주택)",
+      "umdNm": "용두동",
+      "band": "10평대 이하",
+      "area": 30.11,
+      "baseMedian": 40900,
+      "recentMedian": 30874,
+      "change": -0.24514560564611276,
+      "baseCount": 15,
+      "recentCount": 4,
+      "newHigh": true,
+      "lastYm": "202609"
+    },
     {
       "lawd": "41390",
       "region": "경기 시흥시",
@@ -144,22 +160,6 @@
       "recentMedian": 15500,
       "change": -0.13888888888888884,
       "baseCount": 9,
-      "recentCount": 5,
-      "newHigh": false,
-      "lastYm": "202609"
-    },
-    {
-      "lawd": "41117",
-      "region": "경기 수원시 영통구",
-      "id": "s:41117-15",
-      "aptNm": "우남퍼스트빌",
-      "umdNm": "매탄동",
-      "band": "40평대",
-      "area": 101.945,
-      "baseMedian": 61900,
-      "recentMedian": 53418,
-      "change": -0.13702034378071593,
-      "baseCount": 6,
       "recentCount": 5,
       "newHigh": false,
       "lastYm": "202609"
