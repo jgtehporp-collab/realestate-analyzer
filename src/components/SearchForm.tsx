@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import type { Complex } from "@/lib/analysis";
 import { PROVINCES, regionLabel } from "@/lib/regions";
 import { formatEok, formatYm } from "@/lib/format";
+import { clearRecent, loadRecent, removeRecent, type Recent } from "@/lib/recent";
 
-type Recent = { lawd: string; id: string; name: string };
-
-const RECENT_KEY = "rea:recent";
 const LAST_KEY = "rea:last";
 
 function load<T>(key: string, fallback: T): T {
@@ -48,16 +46,14 @@ export default function SearchForm() {
       setProvince(p.name);
       setLawd(last.lawd);
     }
-    setRecent(load<Recent[]>(RECENT_KEY, []));
+    setRecent(loadRecent());
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const districts = PROVINCES.find((p) => p.name === province)?.districts ?? [];
 
   function openReport(c: { id: string; aptNm: string }, code = lawd) {
-    const next = [{ lawd: code, id: c.id, name: c.aptNm }, ...recent.filter((r) => r.id !== c.id)].slice(0, 8);
-    save(RECENT_KEY, next);
-    setRecent(next);
+    // 최근 본 단지 기록은 리포트 페이지(RecordRecent)에서 처리
     router.push(`/report?lawd=${code}&id=${encodeURIComponent(c.id)}`);
   }
 
@@ -185,16 +181,28 @@ export default function SearchForm() {
 
       {!results && recent.length > 0 && (
         <section className="mt-6">
-          <h2 className="text-sm font-bold text-slate-700">최근 본 단지</h2>
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-sm font-bold text-slate-700">
+              최근 본 단지 <span className="font-normal text-slate-400">{recent.length}</span>
+            </h2>
+            <button onClick={() => setRecent(clearRecent())} className="text-xs text-slate-400">
+              전체 지우기
+            </button>
+          </div>
           <div className="mt-2 flex flex-wrap gap-2">
             {recent.map((r) => (
-              <button
-                key={r.id}
-                onClick={() => openReport({ id: r.id, aptNm: r.name }, r.lawd)}
-                className="rounded-full bg-white px-3 py-1.5 text-sm shadow-sm"
-              >
-                {r.name} <span className="text-xs text-slate-400">{regionLabel(r.lawd).split(" ").slice(1).join(" ")}</span>
-              </button>
+              <span key={r.id} className="flex items-center rounded-full bg-white text-sm shadow-sm">
+                <button onClick={() => openReport({ id: r.id, aptNm: r.name }, r.lawd)} className="py-1.5 pl-3 pr-1">
+                  {r.name} <span className="text-xs text-slate-400">{regionLabel(r.lawd).split(" ").slice(1).join(" ")}</span>
+                </button>
+                <button
+                  onClick={() => setRecent(removeRecent(r.id))}
+                  aria-label={`${r.name} 삭제`}
+                  className="px-2 py-1.5 text-slate-300"
+                >
+                  ×
+                </button>
+              </span>
             ))}
           </div>
         </section>
