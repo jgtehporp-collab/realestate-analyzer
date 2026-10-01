@@ -65,7 +65,7 @@ export default function HotTrades() {
               · 최소 거래: 최근 3개월 {MIN_RECENT}건, 이전 6개월 {MIN_BASE}건 이상
             </li>
             <li>· 변동 ±{Math.round(MIN_CHANGE * 100)}% 초과, 단지당 변동 큰 평형 1개</li>
-            <li>· 갱신 {updated} (KST, 매일 새벽 5시경)</li>
+            <li>· 갱신 {updated} (KST, 매일 새벽 5시경 · 실패 시 7시·10시 재시도)</li>
           </ul>
         </>
       )}
