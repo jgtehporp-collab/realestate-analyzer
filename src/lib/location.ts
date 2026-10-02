@@ -247,3 +247,35 @@ export function regionSigunguCode(name: string): Promise<string | null> {
     return /^\d{10}$/.test(b) ? b.slice(0, 5) : null;
   });
 }
+
+/**
+ * 분양 공고 위치: 공급위치 주소 → 단지명 키워드 → 동·읍·면까지 자른 주소 순으로 카카오 검색 (없으면 VWorld 주소).
+ * "OO지구 A6BL"처럼 지번이 없는 주소가 많아 approx로 대략 위치 여부를 표시.
+ */
+export function geocodePresale(address: string, name: string): Promise<{ lat: number; lng: number; approx: boolean } | null> {
+  const kk = kakaoKey();
+  const vk = vworldKey();
+  if (!kk && !vk) return Promise.resolve(null);
+  return memo(`presale-geo:${address}|${name}`, 30 * DAY, async () => {
+    const tokens = address.split(/\s+/);
+    const dongIdx = tokens.findIndex((t, i) => i >= 2 && /(동|읍|면|가|리)$/.test(t));
+    const coarse = dongIdx >= 0 ? tokens.slice(0, dongIdx + 1).join(" ") : tokens.slice(0, 3).join(" ");
+    if (kk) {
+      const exact = await geocodeKakao(address, kk).catch(() => null);
+      if (exact) return { ...exact, approx: false };
+      const region = tokens.slice(0, 2).join(" ");
+      const kw = await kakao("/v2/local/search/keyword.json", { query: `${region} ${name}`, size: 1 }, kk).catch(() => null);
+      const doc = kw?.documents?.[0];
+      if (doc) return { lat: Number(doc.y), lng: Number(doc.x), approx: false };
+      const c = await geocodeKakao(coarse, kk).catch(() => null);
+      if (c) return { ...c, approx: true };
+    }
+    if (vk) {
+      const v = await geocodeVworld(address, vk).catch(() => null);
+      if (v) return { ...v, approx: false };
+      const c = await geocodeVworld(coarse, vk).catch(() => null);
+      if (c) return { ...c, approx: true };
+    }
+    return null;
+  });
+}

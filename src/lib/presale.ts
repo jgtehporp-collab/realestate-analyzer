@@ -16,6 +16,7 @@ import { getServiceKey } from "./dataGoKr";
 import type { Grade } from "./location";
 import { demoAnnouncements, demoPresaleDetail, demoRows } from "./demo";
 import { fetchTrades, recentMonths, type TradeRow } from "./molit";
+import { geocodePresale } from "./location";
 import { PROVINCES, findRegion } from "./regions";
 
 export type PresaleStatus = "청약예정" | "접수중" | "발표대기" | "계약" | "완료";
@@ -246,63 +247,135 @@ export async function upcomingSupply(lawd: string): Promise<SupplyInfo | null> {
   };
 }
 
-export type HotItem = PresaleListItem & { reasons: string[]; score: number };
+export type PresaleTag = "zupzup" | "hot" | null;
+export type HotItem = PresaleListItem & { reasons: string[]; score: number; tag: PresaleTag };
 
-/** 서울·경기 "줍줍"(무순위·재공급·임의공급) + 주목 분양(상한제·대단지 등) 중 청약예정·접수중 최대 10개 */
-export async function getHotPresales(limit = 10): Promise<{ demo: boolean; items: HotItem[] }> {
-  const today = kstToday();
-  if (!getServiceKey()) {
-    const demo = demoAnnouncements("서울특별시 강남구").map((a, i) => ({
-      ...a,
-      ...(i === 0 ? { kind: "remndr" as const, kindLabel: "무순위" } : {}),
-      status: presaleStatus(a, today),
-    }));
-    return {
-      demo: true,
-      items: demo.filter((a) => a.status === "청약예정" || a.status === "접수중").map((a) => ({ ...a, reasons: [a.kindLabel], score: 1 })),
-    };
+/**
+ * 줍줍: 무순위·불법행위 재공급·임의공급 (청약통장·가점 무관하게 노려볼 수 있는 물량)
+ * 주목: 일반 APT 중 분양가상한제(시세 대비 저렴), 서울 투기과열지구, 1,000세대 이상 대단지
+ */
+export function classifyPresale(a: PresaleListItem): { tag: PresaleTag; reasons: string[]; score: number } {
+  const reasons: string[] = [];
+  let score = 0;
+  let tag: PresaleTag = null;
+  if (a.kind !== "apt") {
+    tag = "zupzup";
+    reasons.push(a.kindLabel === "무순위" ? "무순위" : a.kindLabel);
+    score += 5;
   }
-  const since = new Date(Date.now() + 9 * 3600e3 - 90 * 86400e3).toISOString().slice(0, 10);
+  if (a.priceCap) {
+    reasons.push("분양가상한제");
+    score += 3;
+  }
+  if (a.address.startsWith("서울")) score += 1;
+  if (a.overheated) {
+    reasons.push("투기과열지구");
+    score += 1;
+  }
+  if (a.households >= 1000) {
+    reasons.push("대단지");
+    score += 1;
+  }
+  if (a.status === "접수중") score += 0.5;
+  if (!tag && (a.priceCap || a.households >= 1000 || (a.overheated && a.address.startsWith("서울")))) tag = "hot";
+  if (!reasons.length) reasons.push(a.kind === "apt" ? "일반분양" : a.kindLabel);
+  return { tag, reasons, score };
+}
+
+/** 서울·경기 APT·무순위·임의공급 공고 (모집공고일 sinceDays일 이내), 중복 제거 + 상태 */
+async function capitalAnnouncements(sinceDays: number): Promise<PresaleListItem[]> {
+  const today = kstToday();
+  const since = new Date(Date.now() + 9 * 3600e3 - sinceDays * 86400e3).toISOString().slice(0, 10);
   const regions = [
     { keyword: "서울", p: PROVINCES[0] },
     { keyword: "경기", p: PROVINCES[1] },
   ];
   const kinds: AnnKind[] = ["remndr", "opt", "apt"];
-  const jobs = regions.flatMap((r) => kinds.map((k) => listAnnouncements(r.keyword, since, k).then((l) => l.filter((a) => inProvince(a.address, r.p))).catch(() => [] as Announcement[])));
-  const all = (await Promise.all(jobs)).flat();
-
-  const live = all
-    .map((a) => ({ ...a, status: presaleStatus(a, today) }))
-    .filter((a) => a.status === "청약예정" || a.status === "접수중");
+  const jobs = regions.flatMap((r) =>
+    kinds.map((k) =>
+      listAnnouncements(r.keyword, since, k)
+        .then((l) => l.filter((a) => inProvince(a.address, r.p)))
+        .catch(() => [] as Announcement[]),
+    ),
+  );
   const seen = new Set<string>();
-  const scored: HotItem[] = [];
-  for (const a of live) {
-    const key = `${a.kind}:${a.houseManageNo}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const reasons: string[] = [];
-    let score = 0;
-    if (a.kind !== "apt") {
-      reasons.push(a.kindLabel === "무순위" ? "줍줍(무순위)" : a.kindLabel);
-      score += 5;
-    }
-    if (a.priceCap) {
-      reasons.push("분양가상한제");
-      score += 3;
-    }
-    if (a.address.startsWith("서울")) score += 1;
-    if (a.overheated) {
-      reasons.push("투기과열지구");
-      score += 1;
-    }
-    if (a.households >= 1000) {
-      reasons.push("대단지");
-      score += 1;
-    }
-    if (a.status === "접수중") score += 0.5;
-    if (!reasons.length) reasons.push(a.kind === "apt" ? "일반분양" : a.kindLabel);
-    scored.push({ ...a, reasons, score });
-  }
+  return (await Promise.all(jobs))
+    .flat()
+    .filter((a) => (seen.has(`${a.kind}:${a.houseManageNo}`) ? false : (seen.add(`${a.kind}:${a.houseManageNo}`), true)))
+    .map((a) => ({ ...a, status: presaleStatus(a, today) }));
+}
+
+function demoCapital(): PresaleListItem[] {
+  const today = kstToday();
+  return demoAnnouncements("서울특별시 강남구").map((a, i) => ({
+    ...a,
+    ...(i === 0 ? { kind: "remndr" as const, kindLabel: "무순위" } : {}),
+    status: presaleStatus(a, today),
+  }));
+}
+
+/** 서울·경기 "줍줍"(무순위·재공급·임의공급) + 주목 분양(상한제·대단지 등) 중 청약예정·접수중 최대 limit개 */
+export async function getHotPresales(limit = 10): Promise<{ demo: boolean; items: HotItem[] }> {
+  const demo = !getServiceKey();
+  const all = demo ? demoCapital() : await capitalAnnouncements(90);
+  const scored = all
+    .filter((a) => a.status === "청약예정" || a.status === "접수중")
+    .map((a) => ({ ...a, ...classifyPresale(a) }))
+    .filter((a) => demo || a.tag !== null || a.score > 0);
   scored.sort((x, y) => y.score - x.score || (x.receiptStart || x.noticeDate).localeCompare(y.receiptStart || y.noticeDate));
-  return { demo: false, items: scored.slice(0, limit) };
+  return { demo, items: scored.slice(0, limit) };
+}
+
+export type PresaleMapItem = HotItem & {
+  group: "active" | "done";
+  lat: number;
+  lng: number;
+  approx: boolean; // 주소로 정확한 위치를 못 찾아 단지명·동 단위로 표시
+};
+
+const DONE_WINDOW_DAYS = 90;
+
+/** 분양 지도: 서울·경기 청약예정·접수중 + 최근 3개월 내 종료(발표·계약·완료) 공고와 좌표 */
+export async function getPresaleMap(): Promise<{ demo: boolean; items: PresaleMapItem[]; missing: number }> {
+  const demo = !getServiceKey();
+  const today = kstToday();
+  const cutoff = new Date(Date.now() + 9 * 3600e3 - DONE_WINDOW_DAYS * 86400e3).toISOString().slice(0, 10);
+  const all = demo ? demoCapital() : await capitalAnnouncements(DONE_WINDOW_DAYS + 60);
+  const picked = all
+    .map((a) => {
+      const active = a.status === "청약예정" || a.status === "접수중";
+      const last = a.contractEnd || a.winnerDate || a.receiptEnd || a.noticeDate;
+      return { a, group: active ? ("active" as const) : last && last >= cutoff && last <= today ? ("done" as const) : null };
+    })
+    .filter((x): x is { a: PresaleListItem; group: "active" | "done" } => x.group !== null);
+
+  let missing = 0;
+  const items = await mapLimit(picked, 6, async ({ a, group }) => {
+    const p = demo ? demoPoint(a.houseManageNo) : await geocodePresale(a.address, a.name).catch(() => null);
+    if (!p) {
+      missing++;
+      return null;
+    }
+    return { ...a, ...classifyPresale(a), group, lat: p.lat, lng: p.lng, approx: p.approx };
+  });
+  return { demo, items: items.filter((x): x is PresaleMapItem => x !== null), missing };
+}
+
+function demoPoint(no: string) {
+  const n = [...no].reduce((s, c) => s + c.charCodeAt(0), 0);
+  return { lat: 37.5 + (n % 7) * 0.02, lng: 127.0 + (n % 5) * 0.03, approx: false };
+}
+
+async function mapLimit<T, R>(items: T[], limit: number, fn: (x: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        out[i] = await fn(items[i]);
+      }
+    }),
+  );
+  return out;
 }
