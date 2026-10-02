@@ -126,12 +126,12 @@ export function regionLabel(code: string): string {
 }
 
 /**
- * 화면상 한 지역이 실거래 API에서는 여러 코드로 나뉘는 경우.
+ * 화면상 한 지역이 실거래 API에서는 여러 코드로 나뉘는 경우 (분구).
  * 화성시는 2026.2.1 만세·효행·병점·동탄 4개 구로 분구 → 이전 자료는 41590, 이후는 구별 코드.
- * (구 코드는 기존 일반구 부여 관례(41591·41593·41595·41597)로 추정 — 일일 작업 로그로 거래 건수 확인)
+ * 신규 구 코드는 카카오 주소검색의 법정동코드(b_code)로 런타임에 확인 (splitRegions.ts).
  */
-const SOURCE_CODES: Record<string, string[]> = {
-  "41590": ["41590", "41591", "41593", "41595", "41597"],
+export const SPLIT_DISTRICTS: Record<string, string[]> = {
+  "41590": ["경기도 화성시 만세구", "경기도 화성시 효행구", "경기도 화성시 병점구", "경기도 화성시 동탄구"],
 };
 
-export const sourceCodes = (lawd: string): string[] => SOURCE_CODES[lawd] ?? [lawd];
+export const isSplitDistrict = (lawd: string) => lawd in SPLIT_DISTRICTS;
