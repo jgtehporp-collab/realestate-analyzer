@@ -6,11 +6,12 @@ import "leaflet/dist/leaflet.css";
 import type { RegionStat, RegionStatsFile } from "@/lib/regionStats";
 import { formatPct } from "@/lib/format";
 
-type Metric = "price" | "change" | "volume";
+type Metric = "price" | "change" | "volume" | "official";
 
 const METRICS: { key: Metric; label: string }[] = [
   { key: "price", label: "가격" },
   { key: "change", label: "변동률" },
+  { key: "official", label: "공식지수" },
   { key: "volume", label: "거래량" },
 ];
 
@@ -34,10 +35,15 @@ const eokShort = (manwon: number | null) => (manwon === null ? "—" : `${(manwo
 function labelOf(r: RegionStat, metric: Metric) {
   if (metric === "price") return { text: eokShort(r.price84), color: changeColor(r.change) };
   if (metric === "change") return { text: formatPct(r.change, 1, true), color: changeColor(r.change) };
+  if (metric === "official") {
+    const v = r.reb?.chg12w ?? null;
+    // 주간 지수 12주 변동은 실거래 중위가보다 폭이 작아 색 기준을 2.5배로
+    return { text: formatPct(v, 2, true), color: changeColor(v === null ? null : v * 2.5) };
+  }
   return { text: formatPct(r.volChange, 0, true), color: changeColor(r.volChange === null ? null : r.volChange / 4) };
 }
 
-function Sparkline({ values, months }: { values: (number | null)[]; months: string[] }) {
+function Sparkline({ values, start, end }: { values: (number | null)[]; start: string; end: string }) {
   const pts = values.map((v, i) => ({ v, i })).filter((p): p is { v: number; i: number } => p.v !== null);
   if (pts.length < 2) return <p className="text-[11px] text-slate-400">월별 추이 표시할 거래 부족</p>;
   const W = 240;
@@ -59,10 +65,10 @@ function Sparkline({ values, months }: { values: (number | null)[]; months: stri
         <circle key={p.i} cx={x(p.i)} cy={y(p.v)} r={2.2} fill={up ? "#dc2626" : "#2563eb"} />
       ))}
       <text x={6} y={H + 12} fontSize={9} fill="#64748b">
-        {months[0].slice(2, 4)}.{months[0].slice(4)}
+        {start}
       </text>
       <text x={W - 6} y={H + 12} fontSize={9} fill="#64748b" textAnchor="end">
-        {months[months.length - 1].slice(2, 4)}.{months[months.length - 1].slice(4)}
+        {end}
       </text>
     </svg>
   );
@@ -221,11 +227,55 @@ export default function RegionMap({ data, vworldKey }: { data: RegionStatsFile; 
               </div>
               <div>
                 <div className="mb-0.5 text-[11px] font-semibold text-slate-600">월별 84㎡ 환산 중위가</div>
-                <Sparkline values={sel.monthly} months={data.months} />
+                <Sparkline
+                  values={sel.monthly}
+                  start={`${data.months[0].slice(2, 4)}.${data.months[0].slice(4)}`}
+                  end={`${data.months[data.months.length - 1].slice(2, 4)}.${data.months[data.months.length - 1].slice(4)}`}
+                />
               </div>
               <div className="text-[11px] text-slate-500">
                 최근 3개월 {sel.recentCount}건 · 직전 3개월 {sel.prevCount}건
               </div>
+              {sel.reb && (
+                <div className="rounded border border-slate-100 p-2">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[11px] font-semibold text-slate-600">공식 매매지수 (한국부동산원 주간)</span>
+                    <span className="font-bold">{sel.reb.index.toFixed(1)}</span>
+                  </div>
+                  <div className="mt-0.5 flex gap-2 text-[11px]">
+                    {[
+                      ["전주", sel.reb.wow],
+                      ["4주", sel.reb.chg4w],
+                      ["12주", sel.reb.chg12w],
+                    ].map(([k, v]) => (
+                      <span key={k as string}>
+                        {k}{" "}
+                        <b style={{ color: changeColor(typeof v === "number" ? v * 2.5 : null) }}>{formatPct(v as number | null, 2, true)}</b>
+                      </span>
+                    ))}
+                  </div>
+                  <Sparkline values={sel.reb.series} start={`${sel.reb.series.length}주 전`} end={sel.reb.lastWeek} />
+                  {sel.change !== null && sel.reb.chg12w !== null && Math.sign(sel.change) !== Math.sign(sel.reb.chg12w) && (
+                    <p className="text-[10px] text-amber-700">
+                      실거래 중위가와 공식지수 방향이 다름 - 거래된 단지 구성 영향일 수 있어 공식지수를 우선 참고
+                    </p>
+                  )}
+                </div>
+              )}
+              {sel.pop && (
+                <div className="text-[11px] text-slate-600">
+                  주민등록인구 <b>{(sel.pop.total / 10000).toFixed(1)}만명</b>
+                  {sel.pop.yoy !== null && (
+                    <>
+                      {" "}
+                      (전년비 <b style={{ color: changeColor(sel.pop.yoy * 5) }}>{formatPct(sel.pop.yoy, 1, true)}</b>)
+                    </>
+                  )}{" "}
+                  <span className="text-slate-400">
+                    {sel.pop.ym.slice(0, 4)}.{sel.pop.ym.slice(4)} KOSIS
+                  </span>
+                </div>
+              )}
               {sel.top.length > 0 && (
                 <div>
                   <div className="mb-0.5 text-[11px] font-semibold text-slate-600">상승 단지</div>
@@ -262,13 +312,25 @@ export default function RegionMap({ data, vworldKey }: { data: RegionStatsFile; 
               <span key={z.zone} className="rounded-md border border-slate-200 px-2 py-1 text-[11px]">
                 <span className="font-semibold">{z.zone}</span> {eokShort(z.price84)}{" "}
                 <b style={{ color: changeColor(z.change) }}>{formatPct(z.change, 1, true)}</b>
+                {typeof z.rebChg12w === "number" && (
+                  <span className="text-slate-500">
+                    {" "}
+                    · 지수12주 <b style={{ color: changeColor(z.rebChg12w * 2.5) }}>{formatPct(z.rebChg12w, 2, true)}</b>
+                  </span>
+                )}
+                {typeof z.popYoy === "number" && (
+                  <span className="text-slate-500">
+                    {" "}
+                    · 인구 <b>{formatPct(z.popYoy, 1, true)}</b>
+                  </span>
+                )}
               </span>
             ))}
           </div>
         ))}
         <p className="mt-2 text-[10px] leading-snug text-slate-400">
           {data.basis}. 직거래·1층 이하·도시형생활주택 제외. 구(시) 단위 중위가는 그 기간 거래된 단지 구성에 따라 달라질 수 있음. 거래량은
-          최근 3개월 vs 직전 3개월.
+          최근 3개월 vs 직전 3개월. 공식지수: 한국부동산원 주간 아파트 매매가격지수(R-ONE) 12주 변동. 인구: KOSIS 주민등록인구.
         </p>
       </div>
     </section>

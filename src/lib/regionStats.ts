@@ -36,7 +36,82 @@ export type RegionStat = {
   volChange: number | null;
   monthly: (number | null)[]; // 월별 84㎡ 환산 중위가 (months 순서)
   top: { id: string; aptNm: string; band: string; change: number; recentMedian: number }[]; // 지역 내 상승 상위
+  reb?: RebStat | null; // 한국부동산원 주간 매매가격지수
+  pop?: PopStat | null; // KOSIS 주민등록인구
 };
+
+export type RebStat = {
+  lastWeek: string; // 마지막 주 설명 (예: "2026년 9월 4주")
+  index: number;
+  wow: number | null; // 전주 대비
+  chg4w: number | null;
+  chg12w: number | null;
+  series: number[]; // 최근 26주 지수 (오래된 순)
+};
+
+export type PopStat = { ym: string; total: number; yoy: number | null };
+
+/** 공식 통계 원자료(프록시 응답 형태) */
+export type RebRowLike = { cls: string; full: string; week: string; desc: string; value: number };
+export type PopRowLike = { code: string; name: string; ym: string; value: number };
+
+const ratio = (a: number | undefined, b: number | undefined) => (a !== undefined && b !== undefined && b ? a / b - 1 : null);
+
+/** "서울 강남구" / "경기 수원시 장안구" ↔ R-ONE 지역(CLS_NM·CLS_FULLNM) 매칭 */
+function rebMatches(region: string, row: RebRowLike): boolean {
+  const [province, ...tokens] = region.split(" ");
+  if (!row.full.startsWith(province)) return false;
+  const cls = row.cls.replace(/\s+/g, "");
+  if (cls === tokens.join("")) return true; // "수원시장안구"처럼 한 이름으로 오는 경우
+  if (cls !== tokens[tokens.length - 1]) return false;
+  // "장안구"만 오면 상위 시(수원)가 전체 경로에 있어야 함 (서울 중구 vs 다른 중구 등 구분)
+  return tokens.length === 1 || row.full.includes(tokens[0].replace(/시$/, ""));
+}
+
+export function rebStatFor(region: string, rows: RebRowLike[]): RebStat | null {
+  const mine = rows.filter((r) => rebMatches(region, r));
+  if (!mine.length) return null;
+  // 같은 이름이 다른 상위지역에도 있으면 첫 번째 계열만
+  const full = mine[0].full;
+  const byWeek = new Map<string, RebRowLike>();
+  for (const r of mine) if (r.full === full) byWeek.set(r.week, r);
+  const series = [...byWeek.values()].sort((a, b) => a.week.localeCompare(b.week)).slice(-26);
+  const v = series.map((r) => r.value);
+  const n = v.length;
+  if (!n) return null;
+  return {
+    lastWeek: series[n - 1].desc || series[n - 1].week,
+    index: v[n - 1],
+    wow: ratio(v[n - 1], v[n - 2]),
+    chg4w: ratio(v[n - 1], v[n - 5]),
+    chg12w: ratio(v[n - 1], v[n - 13]),
+    series: v,
+  };
+}
+
+export function popStatFor(lawd: string, rows: PopRowLike[]): PopStat | null {
+  const mine = rows.filter((r) => r.code.slice(0, 5) === lawd && (r.code.length <= 5 || /^0+$/.test(r.code.slice(5)))).sort((a, b) => a.ym.localeCompare(b.ym));
+  if (!mine.length) return null;
+  const last = mine[mine.length - 1];
+  const yearAgo = mine.find((r) => Number(r.ym) === Number(last.ym) - 100);
+  return { ym: last.ym, total: last.value, yoy: yearAgo ? last.value / yearAgo.value - 1 : null };
+}
+
+/** 지역 통계에 R-ONE·KOSIS 지표를 붙이고 생활권 평균 계산 */
+export function attachOfficial(regions: RegionStat[], zones: ZoneStat[], reb: RebRowLike[] | null, pop: PopRowLike[] | null) {
+  for (const r of regions) {
+    if (reb) r.reb = rebStatFor(r.region, reb);
+    if (pop) r.pop = popStatFor(r.lawd, pop);
+  }
+  for (const z of zones) {
+    const members = regions.filter((r) => r.zone === z.zone);
+    const chg = members.map((r) => r.reb?.chg12w).filter((x): x is number => typeof x === "number");
+    z.rebChg12w = chg.length ? chg.reduce((a, b) => a + b, 0) / chg.length : null;
+    const now = members.reduce((a, r) => a + (r.pop?.total ?? 0), 0);
+    const ago = members.reduce((a, r) => a + (r.pop && r.pop.yoy !== null ? r.pop.total / (1 + r.pop.yoy) : 0), 0);
+    z.popYoy = now && ago ? now / ago - 1 : null;
+  }
+}
 
 export type ZoneStat = {
   zone: string;
@@ -45,6 +120,8 @@ export type ZoneStat = {
   change: number | null;
   recentCount: number;
   volChange: number | null;
+  rebChg12w?: number | null; // 소속 구 R-ONE 12주 변동 평균
+  popYoy?: number | null; // 인구 전년비
 };
 
 export type RegionStatsFile = {
