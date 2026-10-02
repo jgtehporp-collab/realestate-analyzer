@@ -5,7 +5,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { computeHotTrades, type HotTradesFile } from "../src/lib/hot";
-import { computeRegionStats, type RegionStatsFile } from "../src/lib/regionStats";
+import { attachOfficial, computeRegionStats, type PopRowLike, type RebRowLike, type RegionStatsFile } from "../src/lib/regionStats";
+import { fetchKosisPopulation, fetchRebWeekly, weekId } from "../src/lib/officialStats";
 import { fetchTrades, recentMonths, type TradeRow } from "../src/lib/molit";
 import { PROVINCES } from "../src/lib/regions";
 
@@ -33,6 +34,25 @@ async function fetchDistrict(lawd: string, months: string[]): Promise<{ rows: Tr
       // 401은 비밀값 불일치라 재시도해도 소용없음
       if (attempt >= 2 || (e instanceof Error && e.message.includes("HTTP 401"))) throw e;
     }
+  }
+}
+
+/** 공식 통계(R-ONE·KOSIS): 프록시가 있으면 프록시로, 없으면 직접(REB_KEY·KOSIS_API_KEY 필요). 실패해도 계속 진행 */
+async function fetchOfficial<T>(query: string, direct: () => Promise<T[]>, label: string): Promise<T[] | null> {
+  try {
+    if (PROXY && SECRET) {
+      const res = await fetch(`${PROXY}/api/internal/stats?${query}`, {
+        headers: { authorization: `Bearer ${SECRET}` },
+        signal: AbortSignal.timeout(90_000),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(`프록시 HTTP ${res.status}: ${body?.error ?? ""}`);
+      return body.rows as T[];
+    }
+    return await direct();
+  } catch (e) {
+    console.error(`${label} 실패 (지도에서 해당 지표 생략):`, e instanceof Error ? e.message : e);
+    return null;
   }
 }
 
@@ -100,6 +120,20 @@ async function main() {
   writeFileSync(OUT, JSON.stringify(out, null, 2) + "\n");
 
   const { regions, zones } = computeRegionStats(byLawd, months);
+  const now = new Date(Date.now() + 9 * 3600e3);
+  const startWeek = weekId(new Date(now.getTime() - 30 * 7 * 86400e3));
+  const endWeek = weekId(now);
+  const reb = await fetchOfficial<RebRowLike>(`src=reb&start=${startWeek}&end=${endWeek}`, () => fetchRebWeekly(startWeek, endWeek), "R-ONE 주간지수");
+  const pop = await fetchOfficial<PopRowLike>("src=kosis", () => fetchKosisPopulation(), "KOSIS 인구");
+  attachOfficial(regions, zones, reb, pop);
+  console.log(
+    `R-ONE: ${reb ? `${reb.length}행, 매칭 ${regions.filter((r) => r.reb).length}/${regions.length}곳` : "없음"} / ` +
+      `KOSIS: ${pop ? `${pop.length}행, 매칭 ${regions.filter((r) => r.pop).length}/${regions.length}곳` : "없음"}`,
+  );
+  const unmatched = regions.filter((r) => reb && !r.reb).map((r) => r.region);
+  if (unmatched.length) console.log("R-ONE 미매칭:", unmatched.join(", "), "| 예시 행:", JSON.stringify(reb?.slice(0, 3)));
+  const unmatchedPop = regions.filter((r) => pop && !r.pop).map((r) => r.region);
+  if (unmatchedPop.length) console.log("KOSIS 미매칭:", unmatchedPop.join(", "), "| 예시 행:", JSON.stringify(pop?.slice(0, 3)));
   const regionOut: RegionStatsFile = {
     generatedAt: out.generatedAt,
     months,
