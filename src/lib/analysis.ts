@@ -92,6 +92,9 @@ export type Report = {
 export type PeriodMode = "auto" | "24" | "36";
 export type ReportPeriod = { months: number; mode: PeriodMode; extended: boolean };
 
+/** 연차 태그: 5년 이하 신축, 10년 이하 준신축, 25년 이상 구축, 그 외 N년차 */
+export const ageTag = (age: number) => (age <= 5 ? "#신축" : age <= 10 ? "#준신축" : age >= 25 ? "#구축" : `#${age}년차`);
+
 export const normalizeName = (s: string) =>
   s.replace(/\s+/g, "").replace(/[()（）\-·.,]/g, "").toLowerCase();
 
@@ -302,7 +305,7 @@ export function buildReport(input: {
 
   // 특징 태그
   const tags: string[] = [];
-  if (age !== null) tags.push(age <= 5 ? "#신축" : age <= 10 ? "#준신축" : age >= 25 ? "#구축" : `#${age}년차`);
+  if (age !== null) tags.push(ageTag(age));
   tags.push(`#${input.regionName.split(" ").slice(-1)[0]}`);
   if (trades3m >= 10) tags.push("#거래활발");
   else if (trades3m <= 2) tags.push("#거래한산");

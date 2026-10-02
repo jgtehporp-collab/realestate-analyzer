@@ -1,6 +1,6 @@
 // 페이지/API 라우트가 쓰는 진입점. API 키가 없으면 데모 데이터로 대체.
 import "server-only";
-import { buildReport, complexId, searchComplexes, type Complex, type ExtraStatus, type Extras, type PeriodMode, type Report } from "./analysis";
+import { ageTag, buildReport, complexId, searchComplexes, type Complex, type ExtraStatus, type Extras, type PeriodMode, type Report } from "./analysis";
 import { demoPois, demoRows } from "./demo";
 import { getBuildingInfo, getKaptInfo } from "./kapt";
 import { envGrade, getLocation, kakaoKey, schoolGrade, vworldKey, type PoiType } from "./location";
@@ -133,6 +133,25 @@ function decorate(report: Report) {
   const { kapt, location } = report.extras;
   const tags = report.tags;
   const extraValue: string[] = [];
+
+  // 입주년도: 실거래의 건축년도(buildYear)보다 K-apt 사용승인일이 정확 → 있으면 연차·태그·코멘트를 그 기준으로 교체
+  const useYear = Number(kapt?.useDate?.slice(0, 4));
+  const { complex } = report;
+  if (useYear >= 1950 && useYear !== complex.buildYear) {
+    const thisYear = new Date(Date.now() + 9 * 3600e3).getUTCFullYear();
+    const age = Math.max(1, thisYear - useYear);
+    if (complex.age !== null) {
+      const i = tags.indexOf(ageTag(complex.age));
+      if (i >= 0) tags[i] = ageTag(age);
+    } else {
+      tags.unshift(ageTag(age));
+    }
+    if (complex.buildYear) {
+      report.notes.value = report.notes.value.replace(`${complex.buildYear}년 입주(${complex.age}년차)`, `${useYear}년 입주(${age}년차)`);
+    }
+    complex.buildYear = useYear;
+    complex.age = age;
+  }
   if (kapt?.households) {
     tags.unshift(`#${kapt.households.toLocaleString("ko-KR")}세대`);
     if (kapt.households >= 1000) tags.unshift("#대단지");
