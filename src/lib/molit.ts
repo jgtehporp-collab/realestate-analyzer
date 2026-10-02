@@ -2,6 +2,7 @@
 // 서버 전용: DATA_GO_KR_KEY 환경변수가 필요하며 브라우저로 노출되지 않음.
 import "server-only";
 import { callDataGoKr, getServiceKey, num, str, type RawItem } from "./dataGoKr";
+import { sourceCodes } from "./regions";
 
 export { getServiceKey };
 
@@ -182,10 +183,23 @@ async function fetchMonths<T>(
   return { rows: perMonth.flat(), failedMonths: failedMonths.sort() };
 }
 
+/** 분구 등으로 한 지역이 여러 코드면 모두 조회해 합침 (기본 코드 실패만 오류, 추가 코드 실패는 무시) */
+async function fetchMerged<T>(kind: Kind, lawd: string, months: string[], convert: (it: RawItem, ym: string) => T | null): Promise<FetchResult<T>> {
+  const codes = sourceCodes(lawd);
+  if (codes.length === 1) return fetchMonths(kind, lawd, months, convert);
+  const [main, ...extra] = await Promise.all(
+    codes.map((c, i) => (i === 0 ? fetchMonths(kind, c, months, convert) : fetchMonths(kind, c, months, convert).catch(() => null))),
+  );
+  return {
+    rows: [main!, ...extra].flatMap((r) => r?.rows ?? []),
+    failedMonths: main!.failedMonths,
+  };
+}
+
 export function fetchTrades(lawd: string, months: string[]) {
-  return fetchMonths("trade", lawd, months, toTrade);
+  return fetchMerged("trade", lawd, months, toTrade);
 }
 
 export function fetchRents(lawd: string, months: string[]) {
-  return fetchMonths("rent", lawd, months, toRent);
+  return fetchMerged("rent", lawd, months, toRent);
 }

@@ -124,3 +124,14 @@ export function regionLabel(code: string): string {
   const r = findRegion(code);
   return r ? `${r.province.name} ${r.district.name}` : code;
 }
+
+/**
+ * 화면상 한 지역이 실거래 API에서는 여러 코드로 나뉘는 경우.
+ * 화성시는 2026.2.1 만세·효행·병점·동탄 4개 구로 분구 → 이전 자료는 41590, 이후는 구별 코드.
+ * (구 코드는 기존 일반구 부여 관례(41591·41593·41595·41597)로 추정 — 일일 작업 로그로 거래 건수 확인)
+ */
+const SOURCE_CODES: Record<string, string[]> = {
+  "41590": ["41590", "41591", "41593", "41595", "41597"],
+};
+
+export const sourceCodes = (lawd: string): string[] => SOURCE_CODES[lawd] ?? [lawd];
