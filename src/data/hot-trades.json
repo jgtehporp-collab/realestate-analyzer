@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-02T11:33:31.262Z",
-  "basis": "2026.07~2026.09 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층 제외)",
+  "generatedAt": "2026-10-02T11:37:45.423Z",
+  "basis": "2026.07~2026.09 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
       "lawd": "41173",
@@ -85,22 +85,6 @@
   ],
   "down": [
     {
-      "lawd": "11230",
-      "region": "서울 동대문구",
-      "id": "s:11230-2647",
-      "aptNm": "동대문푸르지오시티(도시형생활주택)",
-      "umdNm": "용두동",
-      "band": "10평대 이하",
-      "area": 30.11,
-      "baseMedian": 40900,
-      "recentMedian": 30874,
-      "change": -0.24514560564611276,
-      "baseCount": 15,
-      "recentCount": 4,
-      "newHigh": true,
-      "lastYm": "202609"
-    },
-    {
       "lawd": "41390",
       "region": "경기 시흥시",
       "id": "s:41390-158",
@@ -161,6 +145,22 @@
       "change": -0.13702034378071593,
       "baseCount": 6,
       "recentCount": 5,
+      "newHigh": false,
+      "lastYm": "202609"
+    },
+    {
+      "lawd": "41500",
+      "region": "경기 이천시",
+      "id": "s:41500-35",
+      "aptNm": "대우3",
+      "umdNm": "증포동",
+      "band": "30평대",
+      "area": 84.7534,
+      "baseMedian": 22500,
+      "recentMedian": 19500,
+      "change": -0.1333333333333333,
+      "baseCount": 7,
+      "recentCount": 4,
       "newHigh": false,
       "lastYm": "202609"
     }
