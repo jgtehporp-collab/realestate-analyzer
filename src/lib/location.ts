@@ -222,3 +222,17 @@ export function getLocation(address: string, fallbackAddress?: string): Promise<
     return { ...point, geocoder, pois, counts, env: envGrade(pois, counts), school: schoolGrade(pois, counts) };
   });
 }
+
+/** 행정구역(예: "서울특별시 강남구") 대표 좌표 - 지도 라벨 위치용. 카카오 주소검색 우선, 없으면 VWorld. */
+export function geocodeRegion(name: string): Promise<{ lat: number; lng: number } | null> {
+  const kk = kakaoKey();
+  const vk = vworldKey();
+  if (!kk && !vk) return Promise.resolve(null);
+  return memo(`region-geo:${name}`, 30 * DAY, async () => {
+    if (kk) {
+      const p = await geocodeKakao(name, kk).catch(() => null);
+      if (p) return p;
+    }
+    return vk ? geocodeVworld(name, vk).catch(() => null) : null;
+  });
+}

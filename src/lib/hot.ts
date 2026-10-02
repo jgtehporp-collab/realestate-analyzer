@@ -46,19 +46,18 @@ export const MIN_CHANGE = 0.03;
  * months: 오래된 순 9개월 (앞 6개월 = 기준, 뒤 3개월 = 최근).
  * 같은 단지·같은 평형대끼리 최근 3개월 중위가 vs 이전 6개월 중위가 비교. 직거래·해제거래·1층 이하·도시형생활주택 제외.
  */
-export function computeHotTrades(
-  byLawd: { lawd: string; region: string; rows: TradeRow[] }[],
-  months: string[],
-  limit = 5,
-): { up: HotTrade[]; down: HotTrade[] } {
+/** 급등·급락·생활권 분석 공통 거래 필터: 직거래·1억 미만·1층 이하(저층 할인 왜곡)·도시형생활주택 제외 */
+export const usableTrade = (t: TradeRow) => !t.direct && t.price >= MIN_PRICE && t.floor > 1 && !isUrbanHousing(t.aptNm);
+
+/** 단지·평형별 최근 3개월 vs 직전 6개월 중위가 변동 (거래 건수 기준 충족한 전체 목록) */
+export function computeComplexChanges(byLawd: { lawd: string; region: string; rows: TradeRow[] }[], months: string[]): HotTrade[] {
   const recentSet = new Set(months.slice(-3));
   const baseSet = new Set(months.slice(0, -3));
   const out: HotTrade[] = [];
   for (const { lawd, region, rows } of byLawd) {
     const groups = new Map<string, TradeRow[]>();
     for (const t of rows) {
-      // 직거래·1억 미만·1층 이하(저층 할인으로 급락 왜곡)·도시형생활주택 제외
-      if (t.direct || t.price < MIN_PRICE || t.floor <= 1 || isUrbanHousing(t.aptNm)) continue;
+      if (!usableTrade(t)) continue;
       const key = `${complexId(t)}#${areaBand(t.area)}`;
       const g = groups.get(key);
       if (g) g.push(t);
@@ -94,6 +93,15 @@ export function computeHotTrades(
       });
     }
   }
+  return out;
+}
+
+export function computeHotTrades(
+  byLawd: { lawd: string; region: string; rows: TradeRow[] }[],
+  months: string[],
+  limit = 5,
+): { up: HotTrade[]; down: HotTrade[] } {
+  const out = computeComplexChanges(byLawd, months);
   // 한 단지는 한 번만 (변동폭이 가장 큰 평형)
   const pick = (list: HotTrade[]) => {
     const seen = new Set<string>();

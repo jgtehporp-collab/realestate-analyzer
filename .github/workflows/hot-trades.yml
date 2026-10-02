@@ -33,12 +33,12 @@ jobs:
         run: npm run hot:build
       - name: 변경 시 커밋
         run: |
-          if git diff --quiet src/data/hot-trades.json; then
+          if git diff --quiet src/data/; then
             echo "변경 없음"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/hot-trades.json
+          git add src/data/hot-trades.json src/data/region-stats.json
           git commit -m "chore: 급등·급락 단지 갱신 ($(TZ=Asia/Seoul date +%F))"
           git push
