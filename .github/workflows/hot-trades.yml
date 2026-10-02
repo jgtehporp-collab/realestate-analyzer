@@ -25,6 +25,9 @@ jobs:
       - name: 급등·급락 계산
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          # 공공데이터포털이 해외망을 막을 때 Vercel 서울 리전 프록시로 조회 (둘 다 있을 때만 사용)
+          HOT_SOURCE_URL: ${{ secrets.HOT_SOURCE_URL }}
+          HOT_BUILD_SECRET: ${{ secrets.HOT_BUILD_SECRET }}
           # 수동 실행은 오늘 갱신 여부와 관계없이 다시 계산
           FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
         run: npm run hot:build

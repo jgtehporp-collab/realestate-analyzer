@@ -10,6 +10,8 @@
 - **급등·급락 단지** (매매 탭 좌측): 서울·경기 60개 구, 최근 3개월 vs 직전 6개월 같은 단지·평형 중위가 비교(직거래·1층 이하 제외, 최근 3건·이전 5건 이상) 상위 5개씩
   - 매일 05:07·07:07·10:07 KST GitHub Actions(그날 성공하면 이후 회차는 건너뜀, 공공데이터포털 접속 불가 시 즉시 중단 후 다음 회차 재시도)(`.github/workflows/hot-trades.yml`)가 `npm run hot:build`로 `src/data/hot-trades.json` 갱신 → 커밋 → Vercel 재배포
   - 저장소 Settings → Secrets and variables → Actions에 `DATA_GO_KR_KEY` 등록 필요
+  - 공공데이터포털이 해외망(GitHub 러너) 접속을 막는 경우 대비: GitHub Secrets에 `HOT_SOURCE_URL`(배포 주소)·`HOT_BUILD_SECRET`, Vercel 환경변수에 같은 `HOT_BUILD_SECRET`을 넣으면 Vercel 서울 리전의 `/api/internal/trades`를 거쳐 조회
+  - 매월 10일까지는 이번 달(신고 지연으로 거래가 거의 없음)을 빼고 지난달까지를 "최근 3개월"로 사용
 - **분양**: 좌측에 서울·경기 **줍줍(무순위·재공급·임의공급) + 주목 분양**(분양가상한제·대단지 등) 청약예정·접수중 최대 10개
   - 시/도·구별 청약홈 APT 분양공고(최근 12개월·예정), 상태(청약예정/접수중/발표대기/계약/완료)
   - 단지 상세: 청약 일정, 규제(분양가상한제·투기과열 등), 주택형별 분양가·공급세대·1순위 경쟁률·당첨가점
