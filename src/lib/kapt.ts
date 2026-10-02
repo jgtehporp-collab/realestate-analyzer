@@ -4,7 +4,7 @@ import "server-only";
 import { callDataGoKr, num, str, type RawItem } from "./dataGoKr";
 import { normalizeName } from "./analysis";
 import { DAY, memo } from "./memo";
-import { sourceCodes } from "./regions";
+import { sourceCodesFor } from "./splitRegions";
 
 const APT_LIST = "https://apis.data.go.kr/1613000/AptListService4/getSigunguAptList4";
 const APT_BASIC = "https://apis.data.go.kr/1613000/AptBasisInfoServiceV5/getAphusBassInfoV5";
@@ -37,7 +37,7 @@ function listSigungu(lawd: string): Promise<ListItem[]> {
   return memo(`kapt-list:${lawd}`, 7 * DAY, async () => {
     const out: ListItem[] = [];
     // 분구된 지역(화성시 등)은 이전·신규 코드 모두 조회 (신규 코드 실패는 무시)
-    for (const [i, code] of sourceCodes(lawd).entries()) {
+    for (const [i, code] of (await sourceCodesFor(lawd)).entries()) {
       try {
         for (let page = 1; page <= 10; page++) {
           const { items, totalCount } = await callDataGoKr(APT_LIST, { sigunguCode: code, numOfRows: 1000, pageNo: page }, "K-apt 단지목록 API");

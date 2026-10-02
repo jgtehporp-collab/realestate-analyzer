@@ -236,3 +236,14 @@ export function geocodeRegion(name: string): Promise<{ lat: number; lng: number 
     return vk ? geocodeVworld(name, vk).catch(() => null) : null;
   });
 }
+
+/** 행정구역명 → 시군구 코드(법정동코드 앞 5자리), 카카오 주소검색 b_code 기준 */
+export function regionSigunguCode(name: string): Promise<string | null> {
+  const kk = kakaoKey();
+  if (!kk) return Promise.resolve(null);
+  return memo(`region-bcode:${name}`, 30 * DAY, async () => {
+    const data = await kakao("/v2/local/search/address.json", { query: name, size: 1 }, kk);
+    const b = String(data?.documents?.[0]?.address?.b_code ?? "");
+    return /^\d{10}$/.test(b) ? b.slice(0, 5) : null;
+  });
+}

@@ -8,7 +8,7 @@ import { computeHotTrades, type HotTradesFile } from "../src/lib/hot";
 import { attachOfficial, computeRegionStats, type PopRowLike, type RebRowLike, type RegionStatsFile } from "../src/lib/regionStats";
 import { fetchKosisPopulation, fetchRebWeekly, weekId } from "../src/lib/officialStats";
 import { fetchTrades, recentMonths, type TradeRow } from "../src/lib/molit";
-import { PROVINCES, sourceCodes } from "../src/lib/regions";
+import { isSplitDistrict, PROVINCES } from "../src/lib/regions";
 
 const OUT = join(process.cwd(), "src/data/hot-trades.json");
 const OUT_REGIONS = join(process.cwd(), "src/data/region-stats.json");
@@ -21,7 +21,7 @@ const FAIL_FAST = 4;
 const PROXY = process.env.HOT_SOURCE_URL?.trim().replace(/\/+$/, "");
 const SECRET = process.env.HOT_BUILD_SECRET?.trim();
 
-async function fetchDistrict(lawd: string, months: string[]): Promise<{ rows: TradeRow[]; failedMonths: string[]; center?: Center }> {
+async function fetchDistrict(lawd: string, months: string[]): Promise<{ rows: TradeRow[]; failedMonths: string[]; center?: Center; codes?: string[] }> {
   if (!PROXY || !SECRET) return fetchTrades(lawd, months);
   const url = `${PROXY}/api/internal/trades?lawd=${lawd}&months=${months.join(",")}&center=1`;
   for (let attempt = 1; ; attempt++) {
@@ -94,14 +94,14 @@ async function main() {
   const failed: string[] = [];
   for (const t of targets) {
     try {
-      const { rows, failedMonths, center } = await fetchDistrict(t.lawd, months);
+      const { rows, failedMonths, center, codes } = await fetchDistrict(t.lawd, months);
       if (failedMonths.length) failed.push(`${t.region}(${failedMonths.join(",")})`);
       byLawd.push({ ...t, rows, center: center ?? prevCenters.get(t.lawd) ?? null });
       console.log(`${t.region}: ${rows.length}건`);
-      if (sourceCodes(t.lawd).length > 1) {
-        // 분구 지역 코드 검증용: 월별 건수 (분구 이후 달이 0이면 신규 구 코드가 틀린 것)
+      if (isSplitDistrict(t.lawd)) {
+        // 분구 지역 코드 검증용: 조회 코드·월별 건수 (최근 달이 0이면 신규 구 코드 확인 실패)
         const byMonth = months.map((m) => `${m.slice(4)}월 ${rows.filter((r) => r.ym === m).length}`);
-        console.log(`  ↳ ${t.region} 월별: ${byMonth.join(", ")}`);
+        console.log(`  ↳ ${t.region} 코드 ${codes?.join("/") ?? "?"} 월별: ${byMonth.join(", ")}`);
       }
     } catch (e) {
       failed.push(t.region);

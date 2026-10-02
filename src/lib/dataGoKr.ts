@@ -39,6 +39,39 @@ function parseXml(text: string) {
   };
 }
 
+// 공공데이터포털 초당 호출 제한(429 LIMITED_NUMBER_OF_SERVICE_REQUESTS_PER_SECOND) 대비: 동시 호출 수 제한
+const MAX_CONCURRENT = 6;
+let active = 0;
+const waiters: (() => void)[] = [];
+async function acquire() {
+  if (active < MAX_CONCURRENT) {
+    active++;
+    return;
+  }
+  await new Promise<void>((resolve) => waiters.push(resolve));
+  active++;
+}
+function release() {
+  active--;
+  waiters.shift()?.();
+}
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** 동시 호출 제한 + 429(초당 한도 초과) 시 잠시 후 최대 3회 재시도 */
+async function limitedFetch(url: string): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    await acquire();
+    let res: Response;
+    try {
+      res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(20_000) });
+    } finally {
+      release();
+    }
+    if (res.status !== 429 || attempt >= 3) return res;
+    await sleep(800 * (attempt + 1));
+  }
+}
+
 /** data.go.kr API 호출. params에 serviceKey는 넣지 않음(자동 추가). */
 export async function callDataGoKr(
   endpoint: string,
@@ -51,10 +84,7 @@ export async function callDataGoKr(
   const qs = Object.entries({ ...params, _type: "json" })
     .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
     .join("&");
-  const res = await fetch(`${endpoint}?serviceKey=${serviceKey}&${qs}`, {
-    cache: "no-store",
-    signal: AbortSignal.timeout(20_000),
-  });
+  const res = await limitedFetch(`${endpoint}?serviceKey=${serviceKey}&${qs}`);
   const text = await res.text();
   if (!res.ok) {
     // 게이트웨이 오류는 XML(OpenAPI_ServiceResponse)로 사유가 옴
