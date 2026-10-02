@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T12:49:43.140Z",
+  "generatedAt": "2026-10-02T23:40:56.536Z",
   "basis": "2026.07~2026.09 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -51,22 +51,6 @@
       "lastYm": "202609"
     },
     {
-      "lawd": "41590",
-      "region": "경기 화성시",
-      "id": "s:41590-966",
-      "aptNm": "시범다은마을우남퍼스트빌",
-      "umdNm": "반송동",
-      "band": "30평대",
-      "area": 67.0661,
-      "baseMedian": 60000,
-      "recentMedian": 80000,
-      "change": 0.33333333333333326,
-      "baseCount": 37,
-      "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202609"
-    },
-    {
       "lawd": "11260",
       "region": "서울 중랑구",
       "id": "s:11260-99",
@@ -78,6 +62,22 @@
       "recentMedian": 61900,
       "change": 0.32960239642606437,
       "baseCount": 23,
+      "recentCount": 5,
+      "newHigh": true,
+      "lastYm": "202609"
+    },
+    {
+      "lawd": "11290",
+      "region": "서울 성북구",
+      "id": "s:11290-20",
+      "aptNm": "한진(609-1)",
+      "umdNm": "돈암동",
+      "band": "40평대",
+      "area": 132.96,
+      "baseMedian": 98000,
+      "recentMedian": 130000,
+      "change": 0.3265306122448979,
+      "baseCount": 11,
       "recentCount": 5,
       "newHigh": true,
       "lastYm": "202609"
@@ -133,22 +133,6 @@
       "lastYm": "202609"
     },
     {
-      "lawd": "41117",
-      "region": "경기 수원시 영통구",
-      "id": "s:41117-15",
-      "aptNm": "우남퍼스트빌",
-      "umdNm": "매탄동",
-      "band": "40평대",
-      "area": 101.945,
-      "baseMedian": 61900,
-      "recentMedian": 53418,
-      "change": -0.13702034378071593,
-      "baseCount": 6,
-      "recentCount": 5,
-      "newHigh": false,
-      "lastYm": "202609"
-    },
-    {
       "lawd": "41500",
       "region": "경기 이천시",
       "id": "s:41500-35",
@@ -163,7 +147,26 @@
       "recentCount": 4,
       "newHigh": false,
       "lastYm": "202609"
+    },
+    {
+      "lawd": "41287",
+      "region": "경기 고양시 일산서구",
+      "id": "s:41287-72",
+      "aptNm": "문촌마을1단지우성",
+      "umdNm": "주엽동",
+      "band": "20평대",
+      "area": 50.55,
+      "baseMedian": 28200,
+      "recentMedian": 24600,
+      "change": -0.12765957446808507,
+      "baseCount": 7,
+      "recentCount": 7,
+      "newHigh": false,
+      "lastYm": "202609"
     }
   ],
-  "failed": []
+  "failed": [
+    "경기 화성시(202607,202608,202609)",
+    "경기 양주시(202601,202602,202603,202604,202605,202606)"
+  ]
 }
