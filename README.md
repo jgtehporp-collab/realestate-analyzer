@@ -7,7 +7,7 @@
   - 핵심 수치: 현재가, 전고점, 전세가율, 투자금(갭), 기회구간(전고점 대비)
   - 시나리오 분석(전고점 회복 시 차익·투자금 대비 수익률), 거래 활성도, 특징 태그, 가치/가격/투자생각 코멘트
   - 인쇄 / PDF 저장(가로 A4 한 장)
-- **급등·급락 단지** (매매 탭 좌측): 서울·경기 60개 구, 최근 3개월 vs 직전 6개월 같은 단지·평형 중위가 비교(직거래·1층 이하 제외, 최근 3건·이전 5건 이상) 상위 5개씩
+- **급등·급락 단지** (매매 탭 좌측): 서울·경기 60개 구, 최근 3개월 vs 직전 6개월 같은 단지·평형 중위가 비교(직거래·1층 이하·도시형생활주택 제외, 최근 3건·이전 5건 이상) 상위 5개씩
   - 매일 05:07·07:07·10:07 KST GitHub Actions(그날 성공하면 이후 회차는 건너뜀, 공공데이터포털 접속 불가 시 즉시 중단 후 다음 회차 재시도)(`.github/workflows/hot-trades.yml`)가 `npm run hot:build`로 `src/data/hot-trades.json` 갱신 → 커밋 → Vercel 재배포
   - 저장소 Settings → Secrets and variables → Actions에 `DATA_GO_KR_KEY` 등록 필요
   - 공공데이터포털이 해외망(GitHub 러너) 접속을 막는 경우 대비: GitHub Secrets에 `HOT_SOURCE_URL`(배포 주소)·`HOT_BUILD_SECRET`, Vercel 환경변수에 같은 `HOT_BUILD_SECRET`을 넣으면 Vercel 서울 리전의 `/api/internal/trades`를 거쳐 조회

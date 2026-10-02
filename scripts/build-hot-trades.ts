@@ -79,7 +79,7 @@ async function main() {
   const { up, down } = computeHotTrades(byLawd, months);
   const out: HotTradesFile = {
     generatedAt: new Date().toISOString(),
-    basis: `${months[6].slice(0, 4)}.${months[6].slice(4)}~${months[8].slice(0, 4)}.${months[8].slice(4)} vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층 제외)`,
+    basis: `${months[6].slice(0, 4)}.${months[6].slice(4)}~${months[8].slice(0, 4)}.${months[8].slice(4)} vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)`,
     up,
     down,
     failed,
