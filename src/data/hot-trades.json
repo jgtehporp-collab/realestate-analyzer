@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T12:44:35.115Z",
+  "generatedAt": "2026-10-02T12:49:43.140Z",
   "basis": "2026.07~2026.09 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -51,6 +51,22 @@
       "lastYm": "202609"
     },
     {
+      "lawd": "41590",
+      "region": "경기 화성시",
+      "id": "s:41590-966",
+      "aptNm": "시범다은마을우남퍼스트빌",
+      "umdNm": "반송동",
+      "band": "30평대",
+      "area": 67.0661,
+      "baseMedian": 60000,
+      "recentMedian": 80000,
+      "change": 0.33333333333333326,
+      "baseCount": 37,
+      "recentCount": 3,
+      "newHigh": true,
+      "lastYm": "202609"
+    },
+    {
       "lawd": "11260",
       "region": "서울 중랑구",
       "id": "s:11260-99",
@@ -63,22 +79,6 @@
       "change": 0.32960239642606437,
       "baseCount": 23,
       "recentCount": 5,
-      "newHigh": true,
-      "lastYm": "202609"
-    },
-    {
-      "lawd": "41111",
-      "region": "경기 수원시 장안구",
-      "id": "s:41111-49",
-      "aptNm": "백설마을현대코오롱아파트",
-      "umdNm": "정자동",
-      "band": "20평대",
-      "area": 59.79,
-      "baseMedian": 41000,
-      "recentMedian": 54250,
-      "change": 0.32317073170731714,
-      "baseCount": 29,
-      "recentCount": 10,
       "newHigh": true,
       "lastYm": "202609"
     }
@@ -165,7 +165,5 @@
       "lastYm": "202609"
     }
   ],
-  "failed": [
-    "경기 양주시"
-  ]
+  "failed": []
 }
