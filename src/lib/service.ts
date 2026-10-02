@@ -2,7 +2,7 @@
 import "server-only";
 import { ageTag, buildReport, complexId, searchComplexes, type Complex, type ExtraStatus, type Extras, type PeriodMode, type Report } from "./analysis";
 import { demoPois, demoRows } from "./demo";
-import { getBuildingInfo, getKaptInfo } from "./kapt";
+import { getBuildingInfo, getKaptInfo, USE_YEAR_TOLERANCE } from "./kapt";
 import { envGrade, getLocation, kakaoKey, schoolGrade, vworldKey, type PoiType } from "./location";
 import { fetchRents, fetchTrades, getServiceKey, recentMonths } from "./molit";
 import { upcomingSupply } from "./presale";
@@ -95,11 +95,11 @@ async function loadExtras(report: Report): Promise<Extras> {
     supply: { state: "ok" },
   };
 
-  const kapt = await getKaptInfo(lawd, complex.umdNm, complex.aptNm).catch((e) => {
+  const kapt = await getKaptInfo(lawd, complex.umdNm, complex.aptNm, complex.buildYear).catch((e) => {
     status.kapt = { state: "error", message: errMsg(e) };
     return null;
   });
-  if (!kapt && status.kapt.state === "ok") status.kapt = { state: "notfound", message: "K-apt에서 일치하는 단지를 찾지 못함 (소규모·신규 단지일 수 있음)" };
+  if (!kapt && status.kapt.state === "ok") status.kapt = { state: "notfound", message: "K-apt에서 일치하는 단지를 찾지 못함 (소규모·신규 단지이거나 입주년도 불일치)" };
 
   const fail = (target: ExtraStatus) => (e: unknown) => {
     target.state = "error";
@@ -137,7 +137,8 @@ function decorate(report: Report) {
   // 입주년도: 실거래의 건축년도(buildYear)보다 K-apt 사용승인일이 정확 → 있으면 연차·태그·코멘트를 그 기준으로 교체
   const useYear = Number(kapt?.useDate?.slice(0, 4));
   const { complex } = report;
-  if (useYear >= 1950 && useYear !== complex.buildYear) {
+  // (getKaptInfo가 ±3년 이내 단지만 채택하므로 여기서는 같은 단지의 정밀한 입주년도로 보정하는 용도)
+  if (useYear >= 1950 && useYear !== complex.buildYear && (!complex.buildYear || Math.abs(useYear - complex.buildYear) <= USE_YEAR_TOLERANCE)) {
     const thisYear = new Date(Date.now() + 9 * 3600e3).getUTCFullYear();
     const age = Math.max(1, thisYear - useYear);
     if (complex.age !== null) {

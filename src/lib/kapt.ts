@@ -87,26 +87,44 @@ export function nameSimilarity(a: string, b: string): number {
 }
 
 /** 실거래 단지(법정동+단지명)에 해당하는 K-apt 단지 찾기. */
-export function matchKapt(list: ListItem[], umdNm: string, aptNm: string): ListItem | null {
-  let best: ListItem | null = null;
-  let bestScore = 0;
-  for (const it of list) {
-    let score = nameSimilarity(it.kaptName, aptNm);
-    if (it.dong && umdNm) score += it.dong === umdNm ? 0.2 : -0.3;
-    if (score > bestScore) {
-      bestScore = score;
-      best = it;
-    }
-  }
-  return bestScore >= 0.6 ? best : null;
+/** 실거래 단지(법정동+단지명)에 해당하는 K-apt 후보 (유사도 0.6 이상, 높은 순 최대 3개) */
+export function matchKaptCandidates(list: ListItem[], umdNm: string, aptNm: string): ListItem[] {
+  return list
+    .map((it) => {
+      let score = nameSimilarity(it.kaptName, aptNm);
+      if (it.dong && umdNm) score += it.dong === umdNm ? 0.2 : -0.3;
+      return { it, score };
+    })
+    .filter((x) => x.score >= 0.6)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((x) => x.it);
 }
+
+export function matchKapt(list: ListItem[], umdNm: string, aptNm: string): ListItem | null {
+  return matchKaptCandidates(list, umdNm, aptNm)[0] ?? null;
+}
+
+/** 입주년도 허용 오차: 실거래 건축년도와 K-apt 사용승인년도가 이 이상 차이 나면 다른 단지로 판단 */
+export const USE_YEAR_TOLERANCE = 3;
 
 const orNull = <T,>(v: T | 0 | "") => (v === 0 || v === "" ? null : v);
 
-export async function getKaptInfo(lawd: string, umdNm: string, aptNm: string): Promise<KaptInfo | null> {
+/**
+ * K-apt 단지 정보. 이름이 비슷한 후보를 순서대로 보며, 실거래 건축년도(buildYear)와 사용승인년도가
+ * ±3년 안인 첫 단지를 채택 (같은 동에 이름이 비슷한 다른 단지가 잘못 붙는 것 방지).
+ */
+export async function getKaptInfo(lawd: string, umdNm: string, aptNm: string, buildYear?: number | null): Promise<KaptInfo | null> {
   const list = await listSigungu(lawd);
-  const hit = matchKapt(list, umdNm, aptNm);
-  if (!hit) return null;
+  for (const hit of matchKaptCandidates(list, umdNm, aptNm)) {
+    const info = await loadKaptInfo(hit);
+    const useYear = Number(info.useDate?.slice(0, 4));
+    if (!buildYear || !useYear || Math.abs(useYear - buildYear) <= USE_YEAR_TOLERANCE) return info;
+  }
+  return null;
+}
+
+function loadKaptInfo(hit: ListItem): Promise<KaptInfo> {
   return memo(`kapt-info:${hit.kaptCode}`, 7 * DAY, async () => {
     const [basic, detail] = await Promise.allSettled([
       callDataGoKr(APT_BASIC, { kaptCode: hit.kaptCode }, "K-apt 기본정보 API"),
