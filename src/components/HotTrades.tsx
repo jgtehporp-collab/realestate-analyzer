@@ -60,7 +60,7 @@ export default function HotTrades() {
           <ul className="space-y-px border-t border-slate-100 px-3 py-1.5 text-[10px] leading-snug text-slate-400">
             <li>· 비교: {data.basis.split(" (")[0]}</li>
             <li>· 같은 단지·같은 평형 중위가 (대표 전용면적 ㎡당 환산)</li>
-            <li>· 제외: 직거래·해제거래·1층 이하·1억 미만</li>
+            <li>· 제외: 직거래·해제거래·1층 이하·1억 미만·도시형생활주택</li>
             <li>
               · 최소 거래: 최근 3개월 {MIN_RECENT}건, 이전 6개월 {MIN_BASE}건 이상
             </li>

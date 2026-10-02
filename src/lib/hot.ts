@@ -28,6 +28,9 @@ export type HotTradesFile = {
   failed: string[];
 };
 
+/** 도시형생활주택: 소형·호수별 가격 편차가 커서 중위가 비교가 왜곡됨 (실거래 단지명에 표기됨) */
+export const isUrbanHousing = (aptNm: string) => aptNm.replace(/\s+/g, "").includes("도시형");
+
 const median = (xs: number[]) => {
   const s = [...xs].sort((a, b) => a - b);
   const m = Math.floor(s.length / 2);
@@ -41,7 +44,7 @@ export const MIN_CHANGE = 0.03;
 
 /**
  * months: 오래된 순 9개월 (앞 6개월 = 기준, 뒤 3개월 = 최근).
- * 같은 단지·같은 평형대끼리 최근 3개월 중위가 vs 이전 6개월 중위가 비교. 직거래·해제거래·1층 이하 제외.
+ * 같은 단지·같은 평형대끼리 최근 3개월 중위가 vs 이전 6개월 중위가 비교. 직거래·해제거래·1층 이하·도시형생활주택 제외.
  */
 export function computeHotTrades(
   byLawd: { lawd: string; region: string; rows: TradeRow[] }[],
@@ -54,8 +57,8 @@ export function computeHotTrades(
   for (const { lawd, region, rows } of byLawd) {
     const groups = new Map<string, TradeRow[]>();
     for (const t of rows) {
-      // 직거래·1억 미만·1층 이하(저층 할인으로 급락 왜곡) 제외
-      if (t.direct || t.price < MIN_PRICE || t.floor <= 1) continue;
+      // 직거래·1억 미만·1층 이하(저층 할인으로 급락 왜곡)·도시형생활주택 제외
+      if (t.direct || t.price < MIN_PRICE || t.floor <= 1 || isUrbanHousing(t.aptNm)) continue;
       const key = `${complexId(t)}#${areaBand(t.area)}`;
       const g = groups.get(key);
       if (g) g.push(t);
