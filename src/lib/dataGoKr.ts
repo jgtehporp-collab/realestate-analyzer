@@ -40,7 +40,7 @@ function parseXml(text: string) {
 }
 
 // 공공데이터포털 초당 호출 제한(429 LIMITED_NUMBER_OF_SERVICE_REQUESTS_PER_SECOND) 대비: 동시 호출 수 제한
-const MAX_CONCURRENT = 6;
+const MAX_CONCURRENT = 4;
 let active = 0;
 const waiters: (() => void)[] = [];
 async function acquire() {
@@ -68,7 +68,7 @@ async function limitedFetch(url: string): Promise<Response> {
       release();
     }
     if (res.status !== 429 || attempt >= 3) return res;
-    await sleep(800 * (attempt + 1));
+    await sleep(1500 * (attempt + 1));
   }
 }
 
