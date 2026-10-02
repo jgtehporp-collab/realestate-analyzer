@@ -4,6 +4,7 @@ import "server-only";
 import { callDataGoKr, num, str, type RawItem } from "./dataGoKr";
 import { normalizeName } from "./analysis";
 import { DAY, memo } from "./memo";
+import { sourceCodes } from "./regions";
 
 const APT_LIST = "https://apis.data.go.kr/1613000/AptListService4/getSigunguAptList4";
 const APT_BASIC = "https://apis.data.go.kr/1613000/AptBasisInfoServiceV5/getAphusBassInfoV5";
@@ -35,12 +36,19 @@ type ListItem = { kaptCode: string; kaptName: string; bjdCode: string; dong: str
 function listSigungu(lawd: string): Promise<ListItem[]> {
   return memo(`kapt-list:${lawd}`, 7 * DAY, async () => {
     const out: ListItem[] = [];
-    for (let page = 1; page <= 10; page++) {
-      const { items, totalCount } = await callDataGoKr(APT_LIST, { sigunguCode: lawd, numOfRows: 1000, pageNo: page }, "K-apt 단지목록 API");
-      for (const it of items) {
-        out.push({ kaptCode: str(it.kaptCode), kaptName: str(it.kaptName), bjdCode: str(it.bjdCode), dong: str(it.as3) || str(it.as4) });
+    // 분구된 지역(화성시 등)은 이전·신규 코드 모두 조회 (신규 코드 실패는 무시)
+    for (const [i, code] of sourceCodes(lawd).entries()) {
+      try {
+        for (let page = 1; page <= 10; page++) {
+          const { items, totalCount } = await callDataGoKr(APT_LIST, { sigunguCode: code, numOfRows: 1000, pageNo: page }, "K-apt 단지목록 API");
+          for (const it of items) {
+            out.push({ kaptCode: str(it.kaptCode), kaptName: str(it.kaptName), bjdCode: str(it.bjdCode), dong: str(it.as3) || str(it.as4) });
+          }
+          if (page * 1000 >= totalCount) break;
+        }
+      } catch (e) {
+        if (i === 0) throw e;
       }
-      if (page * 1000 >= totalCount) break;
     }
     return out;
   });

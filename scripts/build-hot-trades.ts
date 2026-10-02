@@ -8,7 +8,7 @@ import { computeHotTrades, type HotTradesFile } from "../src/lib/hot";
 import { attachOfficial, computeRegionStats, type PopRowLike, type RebRowLike, type RegionStatsFile } from "../src/lib/regionStats";
 import { fetchKosisPopulation, fetchRebWeekly, weekId } from "../src/lib/officialStats";
 import { fetchTrades, recentMonths, type TradeRow } from "../src/lib/molit";
-import { PROVINCES } from "../src/lib/regions";
+import { PROVINCES, sourceCodes } from "../src/lib/regions";
 
 const OUT = join(process.cwd(), "src/data/hot-trades.json");
 const OUT_REGIONS = join(process.cwd(), "src/data/region-stats.json");
@@ -98,6 +98,11 @@ async function main() {
       if (failedMonths.length) failed.push(`${t.region}(${failedMonths.join(",")})`);
       byLawd.push({ ...t, rows, center: center ?? prevCenters.get(t.lawd) ?? null });
       console.log(`${t.region}: ${rows.length}건`);
+      if (sourceCodes(t.lawd).length > 1) {
+        // 분구 지역 코드 검증용: 월별 건수 (분구 이후 달이 0이면 신규 구 코드가 틀린 것)
+        const byMonth = months.map((m) => `${m.slice(4)}월 ${rows.filter((r) => r.ym === m).length}`);
+        console.log(`  ↳ ${t.region} 월별: ${byMonth.join(", ")}`);
+      }
     } catch (e) {
       failed.push(t.region);
       console.error(`${t.region} 실패:`, e instanceof Error ? e.message : e);
