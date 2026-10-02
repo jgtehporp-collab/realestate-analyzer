@@ -190,11 +190,18 @@ async function fetchMerged<T>(kind: Kind, lawd: string, months: string[], conver
   const [main, ...extra] = await Promise.all(
     codes.map((c, i) => (i === 0 ? fetchMonths(kind, c, months, convert) : fetchMonths(kind, c, months, convert).catch(() => null))),
   );
-  return {
-    rows: [main!, ...extra].flatMap((r) => r?.rows ?? []),
-    failedMonths: main!.failedMonths,
-    codes,
-  };
+  // 분구 전후로 같은 거래가 이전·신규 코드 양쪽에 실리는 경우가 있어 중복 제거
+  const seen = new Set<string>();
+  const rows = [main!, ...extra]
+    .flatMap((r) => r?.rows ?? [])
+    .filter((r) => {
+      const o = r as Record<string, unknown>;
+      const key = [o.aptNm, o.umdNm, o.jibun, o.area, o.floor, o.ym, o.day, o.price ?? o.deposit, o.monthly ?? ""].join("|");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  return { rows, failedMonths: main!.failedMonths, codes };
 }
 
 export function fetchTrades(lawd: string, months: string[]) {

@@ -31,8 +31,9 @@ async function fetchDistrict(lawd: string, months: string[]): Promise<{ rows: Tr
       if (!res.ok) throw new Error(`프록시 HTTP ${res.status}: ${body?.error ?? ""}`);
       return body;
     } catch (e) {
-      // 401은 비밀값 불일치라 재시도해도 소용없음
-      if (attempt >= 2 || (e instanceof Error && e.message.includes("HTTP 401"))) throw e;
+      // 401은 비밀값 불일치라 재시도해도 소용없음. 그 외(429 초당 한도 등)는 잠시 쉬고 최대 3회
+      if (attempt >= 3 || (e instanceof Error && e.message.includes("HTTP 401"))) throw e;
+      await new Promise((r) => setTimeout(r, 5000 * attempt));
     }
   }
 }
