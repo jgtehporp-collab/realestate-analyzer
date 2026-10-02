@@ -5,10 +5,14 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { computeHotTrades, type HotTradesFile } from "../src/lib/hot";
+import { computeRegionStats, type RegionStatsFile } from "../src/lib/regionStats";
 import { fetchTrades, recentMonths, type TradeRow } from "../src/lib/molit";
 import { PROVINCES } from "../src/lib/regions";
 
 const OUT = join(process.cwd(), "src/data/hot-trades.json");
+const OUT_REGIONS = join(process.cwd(), "src/data/region-stats.json");
+
+type Center = { lat: number; lng: number } | null;
 const kstDate = (d: Date) => new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 10);
 /** 앞쪽 지역이 이 개수만큼 연속 실패하면 서버 장애로 보고 즉시 중단 (30분 동안 매달리지 않도록) */
 const FAIL_FAST = 4;
@@ -16,9 +20,9 @@ const FAIL_FAST = 4;
 const PROXY = process.env.HOT_SOURCE_URL?.trim().replace(/\/+$/, "");
 const SECRET = process.env.HOT_BUILD_SECRET?.trim();
 
-async function fetchDistrict(lawd: string, months: string[]): Promise<{ rows: TradeRow[]; failedMonths: string[] }> {
+async function fetchDistrict(lawd: string, months: string[]): Promise<{ rows: TradeRow[]; failedMonths: string[]; center?: Center }> {
   if (!PROXY || !SECRET) return fetchTrades(lawd, months);
-  const url = `${PROXY}/api/internal/trades?lawd=${lawd}&months=${months.join(",")}`;
+  const url = `${PROXY}/api/internal/trades?lawd=${lawd}&months=${months.join(",")}&center=1`;
   for (let attempt = 1; ; attempt++) {
     try {
       const res = await fetch(url, { headers: { authorization: `Bearer ${SECRET}` }, signal: AbortSignal.timeout(90_000) });
@@ -57,13 +61,22 @@ async function main() {
   const months = analysisMonths();
   console.log(`조회 경로: ${PROXY && SECRET ? `Vercel 프록시 (${PROXY})` : "공공데이터포털 직접"}, 기간 ${months[0]}~${months[8]}`);
   const targets = PROVINCES.slice(0, 2).flatMap((p) => p.districts.map((d) => ({ lawd: d.code, region: `${p.short} ${d.name}` })));
-  const byLawd: { lawd: string; region: string; rows: TradeRow[] }[] = [];
+  const byLawd: { lawd: string; region: string; rows: TradeRow[]; center: Center }[] = [];
+  // 지도 좌표는 이전 파일 값을 재사용 (프록시에서 새로 못 받아도 유지)
+  const prevCenters = new Map<string, Center>();
+  try {
+    for (const r of (JSON.parse(readFileSync(OUT_REGIONS, "utf8")) as RegionStatsFile).regions) {
+      if (r.lat !== null && r.lng !== null) prevCenters.set(r.lawd, { lat: r.lat, lng: r.lng });
+    }
+  } catch {
+    // 없음
+  }
   const failed: string[] = [];
   for (const t of targets) {
     try {
-      const { rows, failedMonths } = await fetchDistrict(t.lawd, months);
+      const { rows, failedMonths, center } = await fetchDistrict(t.lawd, months);
       if (failedMonths.length) failed.push(`${t.region}(${failedMonths.join(",")})`);
-      byLawd.push({ ...t, rows });
+      byLawd.push({ ...t, rows, center: center ?? prevCenters.get(t.lawd) ?? null });
       console.log(`${t.region}: ${rows.length}건`);
     } catch (e) {
       failed.push(t.region);
@@ -85,6 +98,17 @@ async function main() {
     failed,
   };
   writeFileSync(OUT, JSON.stringify(out, null, 2) + "\n");
+
+  const { regions, zones } = computeRegionStats(byLawd, months);
+  const regionOut: RegionStatsFile = {
+    generatedAt: out.generatedAt,
+    months,
+    basis: `최근 3개월(${months[6].slice(2, 4)}.${months[6].slice(4)}~${months[8].slice(2, 4)}.${months[8].slice(4)}) vs 직전 6개월, 전용 84㎡ 환산 중위가`,
+    regions,
+    zones,
+  };
+  writeFileSync(OUT_REGIONS, JSON.stringify(regionOut) + "\n");
+  console.log(`지역 통계 ${regions.length}곳 (좌표 ${regions.filter((r) => r.lat !== null).length}곳), 생활권 ${zones.length}개`);
   console.log(`급등 ${up.length} / 급락 ${down.length}, 실패 ${failed.length}`);
 }
 

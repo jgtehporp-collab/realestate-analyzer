@@ -1,5 +1,9 @@
 import { connection } from "next/server";
 import HotTrades from "@/components/HotTrades";
+import RegionMap from "@/components/RegionMap";
+import regionStats from "@/data/region-stats.json";
+import type { RegionStatsFile } from "@/lib/regionStats";
+import { vworldKey } from "@/lib/location";
 import SearchForm from "@/components/SearchForm";
 import { connectionStatus } from "@/lib/service";
 
@@ -19,6 +23,9 @@ export default async function Home() {
       </aside>
       <div className="order-1 min-w-0 lg:order-none">
       <SearchForm />
+      <div className="px-4 pb-6 lg:px-0">
+        <RegionMap data={regionStats as RegionStatsFile} vworldKey={vworldKey()} />
+      </div>
       <section className="mx-auto max-w-2xl px-4 pb-10">
         <h2 className="text-xs font-bold text-slate-500">데이터 연결 상태</h2>
         <ul className="mt-1 space-y-1 text-xs">

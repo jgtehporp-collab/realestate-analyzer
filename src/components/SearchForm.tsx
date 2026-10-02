@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Complex } from "@/lib/analysis";
 import { PROVINCES, regionLabel } from "@/lib/regions";
@@ -36,6 +36,7 @@ export default function SearchForm() {
   const [results, setResults] = useState<Complex[] | null>(null);
   const [demo, setDemo] = useState(false);
   const [recent, setRecent] = useState<Recent[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     const last = load<{ province: string; lawd: string } | null>(LAST_KEY, null);
@@ -48,6 +49,22 @@ export default function SearchForm() {
     }
     setRecent(loadRecent());
     /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  // 생활권 지도의 "이 지역 단지 찾기" → 시/도·구 선택 후 검색창으로 이동
+  useEffect(() => {
+    const onPick = (e: Event) => {
+      const code = (e as CustomEvent<{ lawd: string }>).detail?.lawd;
+      const p = PROVINCES.find((x) => x.districts.some((d) => d.code === code));
+      if (!p || !code) return;
+      setProvince(p.name);
+      setLawd(code);
+      setResults(null);
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      formRef.current?.querySelector("input")?.focus({ preventScroll: true });
+    };
+    window.addEventListener("rea:pick-region", onPick);
+    return () => window.removeEventListener("rea:pick-region", onPick);
   }, []);
 
   const districts = PROVINCES.find((p) => p.name === province)?.districts ?? [];
@@ -88,7 +105,7 @@ export default function SearchForm() {
         구를 선택하고 아파트명을 입력하면 국토부 실거래가로 1페이지 분석 자료를 만듭니다.
       </p>
 
-      <form onSubmit={onSearch} className="mt-5 space-y-3 rounded-xl bg-white p-4 shadow-sm">
+      <form ref={formRef} onSubmit={onSearch} className="mt-5 space-y-3 rounded-xl bg-white p-4 shadow-sm">
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="text-xs font-semibold text-slate-500">시/도</span>
