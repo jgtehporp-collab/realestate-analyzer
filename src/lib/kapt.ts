@@ -52,10 +52,30 @@ function bigrams(s: string): Set<string> {
   return out;
 }
 
+// 영문/한글로 혼용되는 브랜드명 통일 (실거래 "역삼I'PARK" ↔ K-apt "역삼아이파크" 등)
+const BRAND_ALIASES: [RegExp, string][] = [
+  [/i'?park/g, "아이파크"],
+  [/xi/g, "자이"],
+  [/e편한세상|이-?편한세상/g, "e편한세상"],
+  [/sk ?view|skview/g, "sk뷰"],
+  [/hillstate/g, "힐스테이트"],
+  [/prugio/g, "푸르지오"],
+  [/raemian/g, "래미안"],
+  [/thesharp|the#/g, "더샵"],
+  [/lotte ?castle/g, "롯데캐슬"],
+  [/'/g, ""],
+];
+
+function canonicalName(s: string): string {
+  let n = normalizeName(s);
+  for (const [re, to] of BRAND_ALIASES) n = n.replace(re, to);
+  return n.replace(/아파트$/, "");
+}
+
 /** 단지명 유사도 (0~1). 포함관계면 높게, 아니면 글자 2-gram 겹침. */
 export function nameSimilarity(a: string, b: string): number {
-  const x = normalizeName(a).replace(/아파트$/, "");
-  const y = normalizeName(b).replace(/아파트$/, "");
+  const x = canonicalName(a);
+  const y = canonicalName(b);
   if (!x || !y) return 0;
   if (x === y) return 1;
   if (x.includes(y) || y.includes(x)) return 0.9;
