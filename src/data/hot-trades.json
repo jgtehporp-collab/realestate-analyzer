@@ -1,7 +1,39 @@
 {
-  "generatedAt": "2026-10-04T22:57:53.502Z",
+  "generatedAt": "2026-10-06T01:16:10.380Z",
   "basis": "2026.07~2026.09 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
+    {
+      "lawd": "41590",
+      "region": "경기 화성시",
+      "id": "s:41590-1660",
+      "aptNm": "동탄2신도시호반베르디움22단지",
+      "umdNm": "목동",
+      "band": "20평대",
+      "area": 53.4754,
+      "baseMedian": 55500,
+      "recentMedian": 75000,
+      "change": 0.3513513513513513,
+      "baseCount": 62,
+      "recentCount": 4,
+      "newHigh": true,
+      "lastYm": "202608"
+    },
+    {
+      "lawd": "41590",
+      "region": "경기 화성시",
+      "id": "s:41590-966",
+      "aptNm": "시범다은마을우남퍼스트빌",
+      "umdNm": "반송동",
+      "band": "30평대",
+      "area": 67.0661,
+      "baseMedian": 59569,
+      "recentMedian": 80000,
+      "change": 0.34296990493262536,
+      "baseCount": 26,
+      "recentCount": 3,
+      "newHigh": true,
+      "lastYm": "202609"
+    },
     {
       "lawd": "41173",
       "region": "경기 안양시 동안구",
@@ -35,49 +67,17 @@
       "lastYm": "202608"
     },
     {
-      "lawd": "41111",
-      "region": "경기 수원시 장안구",
-      "id": "s:41111-105",
-      "aptNm": "꽃뫼노을마을한마루아파트",
-      "umdNm": "정자동",
-      "band": "20평대",
-      "area": 60,
-      "baseMedian": 45150,
-      "recentMedian": 60350,
-      "change": 0.336655592469546,
-      "baseCount": 14,
-      "recentCount": 6,
-      "newHigh": true,
-      "lastYm": "202609"
-    },
-    {
-      "lawd": "11260",
-      "region": "서울 중랑구",
-      "id": "s:11260-99",
-      "aptNm": "신내11대명",
-      "umdNm": "신내동",
-      "band": "20평대",
-      "area": 49.77,
-      "baseMedian": 46555,
-      "recentMedian": 61900,
-      "change": 0.32960239642606437,
-      "baseCount": 23,
-      "recentCount": 5,
-      "newHigh": true,
-      "lastYm": "202609"
-    },
-    {
-      "lawd": "11290",
-      "region": "서울 성북구",
-      "id": "s:11290-20",
-      "aptNm": "한진(609-1)",
-      "umdNm": "돈암동",
-      "band": "40평대",
-      "area": 132.96,
-      "baseMedian": 98000,
-      "recentMedian": 130000,
-      "change": 0.3265306122448979,
-      "baseCount": 11,
+      "lawd": "41590",
+      "region": "경기 화성시",
+      "id": "s:41590-1438",
+      "aptNm": "동탄역반도유보라아이비파크2.0",
+      "umdNm": "영천동",
+      "band": "30평대",
+      "area": 84.9921,
+      "baseMedian": 67000,
+      "recentMedian": 89719,
+      "change": 0.33909279044506335,
+      "baseCount": 45,
       "recentCount": 5,
       "newHigh": true,
       "lastYm": "202609"
@@ -165,7 +165,5 @@
       "lastYm": "202609"
     }
   ],
-  "failed": [
-    "경기 양주시(202601,202602,202603,202604,202605,202606)"
-  ]
+  "failed": []
 }
