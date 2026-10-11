@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-10T23:24:01.191Z",
+  "generatedAt": "2026-10-11T23:33:12.507Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -51,6 +51,22 @@
       "lastYm": "202609"
     },
     {
+      "lawd": "41590",
+      "region": "경기 화성시",
+      "id": "s:41590-1660",
+      "aptNm": "동탄2신도시호반베르디움22단지",
+      "umdNm": "목동",
+      "band": "20평대",
+      "area": 53.4754,
+      "baseMedian": 57150,
+      "recentMedian": 75558,
+      "change": 0.322105168920517,
+      "baseCount": 66,
+      "recentCount": 5,
+      "newHigh": false,
+      "lastYm": "202610"
+    },
+    {
       "lawd": "41117",
       "region": "경기 수원시 영통구",
       "id": "s:41117-52",
@@ -65,22 +81,6 @@
       "recentCount": 27,
       "newHigh": true,
       "lastYm": "202610"
-    },
-    {
-      "lawd": "41111",
-      "region": "경기 수원시 장안구",
-      "id": "s:41111-105",
-      "aptNm": "꽃뫼노을마을한마루아파트",
-      "umdNm": "정자동",
-      "band": "20평대",
-      "area": 60,
-      "baseMedian": 46900,
-      "recentMedian": 61750,
-      "change": 0.3166311300639659,
-      "baseCount": 14,
-      "recentCount": 4,
-      "newHigh": true,
-      "lastYm": "202609"
     }
   ],
   "down": [
@@ -165,7 +165,5 @@
       "lastYm": "202610"
     }
   ],
-  "failed": [
-    "경기 양주시(202602,202603,202604,202605,202606,202607)"
-  ]
+  "failed": []
 }
