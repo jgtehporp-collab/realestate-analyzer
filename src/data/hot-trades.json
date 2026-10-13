@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-11T23:33:12.507Z",
+  "generatedAt": "2026-10-13T01:57:30.431Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -11,10 +11,26 @@
       "band": "20평대",
       "area": 59.79,
       "baseMedian": 42143,
-      "recentMedian": 58045,
-      "change": 0.3773368910601895,
+      "recentMedian": 59290,
+      "change": 0.4068801897983392,
       "baseCount": 58,
-      "recentCount": 6,
+      "recentCount": 7,
+      "newHigh": true,
+      "lastYm": "202610"
+    },
+    {
+      "lawd": "11260",
+      "region": "서울 중랑구",
+      "id": "s:11260-99",
+      "aptNm": "신내11대명",
+      "umdNm": "신내동",
+      "band": "20평대",
+      "area": 49.77,
+      "baseMedian": 46639,
+      "recentMedian": 62500,
+      "change": 0.34009299922500635,
+      "baseCount": 23,
+      "recentCount": 4,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -35,35 +51,19 @@
       "lastYm": "202610"
     },
     {
-      "lawd": "11260",
-      "region": "서울 중랑구",
-      "id": "s:11260-99",
-      "aptNm": "신내11대명",
-      "umdNm": "신내동",
-      "band": "20평대",
-      "area": 49.77,
-      "baseMedian": 46639,
-      "recentMedian": 62000,
-      "change": 0.3293722552312064,
-      "baseCount": 23,
+      "lawd": "41173",
+      "region": "경기 안양시 동안구",
+      "id": "s:41173-216",
+      "aptNm": "샛별한양6(고층1109-4)",
+      "umdNm": "비산동",
+      "band": "10평대 이하",
+      "area": 35.1,
+      "baseMedian": 38950,
+      "recentMedian": 52000,
+      "change": 0.3350449293966624,
+      "baseCount": 26,
       "recentCount": 3,
       "newHigh": true,
-      "lastYm": "202609"
-    },
-    {
-      "lawd": "41590",
-      "region": "경기 화성시",
-      "id": "s:41590-1660",
-      "aptNm": "동탄2신도시호반베르디움22단지",
-      "umdNm": "목동",
-      "band": "20평대",
-      "area": 53.4754,
-      "baseMedian": 57150,
-      "recentMedian": 75558,
-      "change": 0.322105168920517,
-      "baseCount": 66,
-      "recentCount": 5,
-      "newHigh": false,
       "lastYm": "202610"
     },
     {
@@ -78,7 +78,7 @@
       "recentMedian": 53000,
       "change": 0.3216957605985038,
       "baseCount": 83,
-      "recentCount": 27,
+      "recentCount": 28,
       "newHigh": true,
       "lastYm": "202610"
     }
@@ -117,6 +117,22 @@
       "lastYm": "202609"
     },
     {
+      "lawd": "41390",
+      "region": "경기 시흥시",
+      "id": "s:41390-170",
+      "aptNm": "주공6",
+      "umdNm": "정왕동",
+      "band": "20평대",
+      "area": 59.94,
+      "baseMedian": 26050,
+      "recentMedian": 21996,
+      "change": -0.15561112187219361,
+      "baseCount": 8,
+      "recentCount": 3,
+      "newHigh": false,
+      "lastYm": "202610"
+    },
+    {
       "lawd": "41117",
       "region": "경기 수원시 영통구",
       "id": "s:41117-15",
@@ -147,23 +163,9 @@
       "recentCount": 3,
       "newHigh": false,
       "lastYm": "202609"
-    },
-    {
-      "lawd": "41220",
-      "region": "경기 평택시",
-      "id": "s:41220-1751",
-      "aptNm": "포승삼부르네상스2단지",
-      "umdNm": "포승읍 도곡리",
-      "band": "30평대",
-      "area": 84.9978,
-      "baseMedian": 17400,
-      "recentMedian": 15300,
-      "change": -0.12068965517241381,
-      "baseCount": 10,
-      "recentCount": 5,
-      "newHigh": false,
-      "lastYm": "202610"
     }
   ],
-  "failed": []
+  "failed": [
+    "경기 양주시(202602,202603,202604,202605,202606,202607)"
+  ]
 }
