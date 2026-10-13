@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-13T01:57:30.431Z",
+  "generatedAt": "2026-10-13T23:42:24.924Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -11,10 +11,10 @@
       "band": "20평대",
       "area": 59.79,
       "baseMedian": 42143,
-      "recentMedian": 59290,
-      "change": 0.4068801897983392,
+      "recentMedian": 59145,
+      "change": 0.4034385275312149,
       "baseCount": 58,
-      "recentCount": 7,
+      "recentCount": 8,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -67,18 +67,18 @@
       "lastYm": "202610"
     },
     {
-      "lawd": "41117",
-      "region": "경기 수원시 영통구",
-      "id": "s:41117-52",
-      "aptNm": "신나무실휴먼시아5단지",
-      "umdNm": "영통동",
-      "band": "20평대",
-      "area": 59.99,
-      "baseMedian": 40100,
-      "recentMedian": 53000,
-      "change": 0.3216957605985038,
-      "baseCount": 83,
-      "recentCount": 28,
+      "lawd": "41173",
+      "region": "경기 안양시 동안구",
+      "id": "s:41173-39",
+      "aptNm": "공작아파트",
+      "umdNm": "관양동",
+      "band": "10평대 이하",
+      "area": 37.85,
+      "baseMedian": 39700,
+      "recentMedian": 52500,
+      "change": 0.32241813602015124,
+      "baseCount": 69,
+      "recentCount": 15,
       "newHigh": true,
       "lastYm": "202610"
     }
