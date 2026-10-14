@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-13T23:42:24.924Z",
+  "generatedAt": "2026-10-14T23:05:52.108Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -17,6 +17,22 @@
       "recentCount": 8,
       "newHigh": true,
       "lastYm": "202610"
+    },
+    {
+      "lawd": "11320",
+      "region": "서울 도봉구",
+      "id": "s:11320-99",
+      "aptNm": "창동주공4단지",
+      "umdNm": "창동",
+      "band": "10평대 이하",
+      "area": 36.16,
+      "baseMedian": 31671,
+      "recentMedian": 42488,
+      "change": 0.341569099368763,
+      "baseCount": 14,
+      "recentCount": 3,
+      "newHigh": true,
+      "lastYm": "202609"
     },
     {
       "lawd": "11260",
@@ -65,22 +81,6 @@
       "recentCount": 3,
       "newHigh": true,
       "lastYm": "202610"
-    },
-    {
-      "lawd": "41173",
-      "region": "경기 안양시 동안구",
-      "id": "s:41173-39",
-      "aptNm": "공작아파트",
-      "umdNm": "관양동",
-      "band": "10평대 이하",
-      "area": 37.85,
-      "baseMedian": 39700,
-      "recentMedian": 52500,
-      "change": 0.32241813602015124,
-      "baseCount": 69,
-      "recentCount": 15,
-      "newHigh": true,
-      "lastYm": "202610"
     }
   ],
   "down": [
@@ -117,6 +117,22 @@
       "lastYm": "202609"
     },
     {
+      "lawd": "41480",
+      "region": "경기 파주시",
+      "id": "s:41480-1773",
+      "aptNm": "한울마을1단지운정신도시IPARK",
+      "umdNm": "동패동",
+      "band": "40평대",
+      "area": 109.9,
+      "baseMedian": 94250,
+      "recentMedian": 78935,
+      "change": -0.16248957284035703,
+      "baseCount": 6,
+      "recentCount": 5,
+      "newHigh": false,
+      "lastYm": "202610"
+    },
+    {
       "lawd": "41390",
       "region": "경기 시흥시",
       "id": "s:41390-170",
@@ -147,25 +163,7 @@
       "recentCount": 3,
       "newHigh": true,
       "lastYm": "202609"
-    },
-    {
-      "lawd": "41410",
-      "region": "경기 군포시",
-      "id": "s:41410-75",
-      "aptNm": "삼익소월",
-      "umdNm": "금정동",
-      "band": "40평대",
-      "area": 101.94,
-      "baseMedian": 65800,
-      "recentMedian": 57248,
-      "change": -0.12997516058635328,
-      "baseCount": 11,
-      "recentCount": 3,
-      "newHigh": false,
-      "lastYm": "202609"
     }
   ],
-  "failed": [
-    "경기 양주시(202602,202603,202604,202605,202606,202607)"
-  ]
+  "failed": []
 }
