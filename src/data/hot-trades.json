@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-14T23:05:52.108Z",
+  "generatedAt": "2026-10-15T22:58:53.068Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -15,6 +15,22 @@
       "change": 0.4034385275312149,
       "baseCount": 58,
       "recentCount": 8,
+      "newHigh": true,
+      "lastYm": "202610"
+    },
+    {
+      "lawd": "41173",
+      "region": "경기 안양시 동안구",
+      "id": "s:41173-40",
+      "aptNm": "공작성일",
+      "umdNm": "관양동",
+      "band": "10평대 이하",
+      "area": 39.6,
+      "baseMedian": 38500,
+      "recentMedian": 52500,
+      "change": 0.36363636363636354,
+      "baseCount": 18,
+      "recentCount": 3,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -65,22 +81,6 @@
       "recentCount": 5,
       "newHigh": true,
       "lastYm": "202610"
-    },
-    {
-      "lawd": "41173",
-      "region": "경기 안양시 동안구",
-      "id": "s:41173-216",
-      "aptNm": "샛별한양6(고층1109-4)",
-      "umdNm": "비산동",
-      "band": "10평대 이하",
-      "area": 35.1,
-      "baseMedian": 38950,
-      "recentMedian": 52000,
-      "change": 0.3350449293966624,
-      "baseCount": 26,
-      "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202610"
     }
   ],
   "down": [
@@ -99,6 +99,22 @@
       "recentCount": 3,
       "newHigh": false,
       "lastYm": "202609"
+    },
+    {
+      "lawd": "41500",
+      "region": "경기 이천시",
+      "id": "s:41500-34",
+      "aptNm": "대우2",
+      "umdNm": "증포동",
+      "band": "20평대",
+      "area": 59.988,
+      "baseMedian": 16500,
+      "recentMedian": 13200,
+      "change": -0.19999999999999996,
+      "baseCount": 9,
+      "recentCount": 3,
+      "newHigh": false,
+      "lastYm": "202610"
     },
     {
       "lawd": "11500",
@@ -147,22 +163,6 @@
       "recentCount": 3,
       "newHigh": false,
       "lastYm": "202610"
-    },
-    {
-      "lawd": "41117",
-      "region": "경기 수원시 영통구",
-      "id": "s:41117-15",
-      "aptNm": "우남퍼스트빌",
-      "umdNm": "매탄동",
-      "band": "40평대",
-      "area": 101.945,
-      "baseMedian": 61800,
-      "recentMedian": 53418,
-      "change": -0.13562393657000515,
-      "baseCount": 7,
-      "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202609"
     }
   ],
   "failed": []
