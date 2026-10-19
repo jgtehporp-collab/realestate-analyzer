@@ -1,7 +1,23 @@
 {
-  "generatedAt": "2026-10-18T22:20:03.043Z",
+  "generatedAt": "2026-10-19T23:31:42.639Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
+    {
+      "lawd": "41173",
+      "region": "경기 안양시 동안구",
+      "id": "s:41173-170",
+      "aptNm": "샛별한양6(고층1109)",
+      "umdNm": "비산동",
+      "band": "10평대 이하",
+      "area": 35.1,
+      "baseMedian": 39000,
+      "recentMedian": 55000,
+      "change": 0.41025641025641035,
+      "baseCount": 19,
+      "recentCount": 3,
+      "newHigh": true,
+      "lastYm": "202610"
+    },
     {
       "lawd": "41117",
       "region": "경기 수원시 영통구",
@@ -11,10 +27,10 @@
       "band": "20평대",
       "area": 59.79,
       "baseMedian": 42143,
-      "recentMedian": 59145,
-      "change": 0.4034385275312149,
+      "recentMedian": 59290,
+      "change": 0.4068801897983392,
       "baseCount": 58,
-      "recentCount": 8,
+      "recentCount": 9,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -65,22 +81,6 @@
       "recentCount": 3,
       "newHigh": true,
       "lastYm": "202610"
-    },
-    {
-      "lawd": "11320",
-      "region": "서울 도봉구",
-      "id": "s:11320-99",
-      "aptNm": "창동주공4단지",
-      "umdNm": "창동",
-      "band": "10평대 이하",
-      "area": 36.16,
-      "baseMedian": 31671,
-      "recentMedian": 42488,
-      "change": 0.341569099368763,
-      "baseCount": 14,
-      "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202609"
     }
   ],
   "down": [
@@ -165,5 +165,7 @@
       "lastYm": "202610"
     }
   ],
-  "failed": []
+  "failed": [
+    "경기 양주시(202602,202603,202604,202605,202606,202607)"
+  ]
 }
