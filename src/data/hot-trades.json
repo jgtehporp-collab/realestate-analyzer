@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T23:31:42.639Z",
+  "generatedAt": "2026-10-20T23:05:17.451Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -27,10 +27,26 @@
       "band": "20평대",
       "area": 59.79,
       "baseMedian": 42143,
-      "recentMedian": 59290,
-      "change": 0.4068801897983392,
+      "recentMedian": 59395,
+      "change": 0.40937071763826616,
       "baseCount": 58,
-      "recentCount": 9,
+      "recentCount": 10,
+      "newHigh": true,
+      "lastYm": "202610"
+    },
+    {
+      "lawd": "41173",
+      "region": "경기 안양시 동안구",
+      "id": "s:41173-216",
+      "aptNm": "샛별한양6(고층1109-4)",
+      "umdNm": "비산동",
+      "band": "10평대 이하",
+      "area": 35.1,
+      "baseMedian": 38950,
+      "recentMedian": 53500,
+      "change": 0.373555840821566,
+      "baseCount": 26,
+      "recentCount": 5,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -46,22 +62,6 @@
       "recentMedian": 52500,
       "change": 0.36363636363636354,
       "baseCount": 18,
-      "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202610"
-    },
-    {
-      "lawd": "41410",
-      "region": "경기 군포시",
-      "id": "s:41410-40",
-      "aptNm": "묘향(롯데)",
-      "umdNm": "산본동",
-      "band": "40평대",
-      "area": 133.08,
-      "baseMedian": 66850,
-      "recentMedian": 91117,
-      "change": 0.3630016472382678,
-      "baseCount": 14,
       "recentCount": 3,
       "newHigh": true,
       "lastYm": "202610"
@@ -149,23 +149,21 @@
       "lastYm": "202610"
     },
     {
-      "lawd": "41390",
-      "region": "경기 시흥시",
-      "id": "s:41390-170",
-      "aptNm": "주공6",
-      "umdNm": "정왕동",
-      "band": "20평대",
-      "area": 59.94,
-      "baseMedian": 26050,
-      "recentMedian": 21996,
-      "change": -0.15561112187219361,
-      "baseCount": 8,
+      "lawd": "11680",
+      "region": "서울 강남구",
+      "id": "s:11680-275",
+      "aptNm": "대우디오빌",
+      "umdNm": "역삼동",
+      "band": "10평대 이하",
+      "area": 30.03,
+      "baseMedian": 28800,
+      "recentMedian": 24300,
+      "change": -0.15625,
+      "baseCount": 13,
       "recentCount": 3,
       "newHigh": false,
-      "lastYm": "202610"
+      "lastYm": "202609"
     }
   ],
-  "failed": [
-    "경기 양주시(202602,202603,202604,202605,202606,202607)"
-  ]
+  "failed": []
 }
