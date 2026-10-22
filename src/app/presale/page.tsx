@@ -43,7 +43,7 @@ export default async function PresalePage({ searchParams }: Props) {
       <p className="mt-1 text-sm text-slate-600">청약홈 APT 분양공고(최근 12개월·예정)와 주택형별 분양가·경쟁률, 인근 신축 실거래 대비 안전마진을 봅니다.</p>
       <div className="mt-4">
         <Suspense
-          fallback={<div className="flex h-[300px] items-center justify-center rounded-xl bg-white text-xs text-slate-500 shadow-sm">서울·경기 분양 지도 불러오는 중…</div>}
+          fallback={<div className="flex h-[300px] items-center justify-center rounded-xl bg-white text-xs text-slate-500 shadow-sm">수도권(서울·경기·인천) 분양 지도 불러오는 중…</div>}
         >
           <PresaleMapSection />
         </Suspense>
