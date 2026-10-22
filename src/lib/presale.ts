@@ -282,13 +282,14 @@ export function classifyPresale(a: PresaleListItem): { tag: PresaleTag; reasons:
   return { tag, reasons, score };
 }
 
-/** 서울·경기 APT·무순위·임의공급 공고 (모집공고일 sinceDays일 이내), 중복 제거 + 상태 */
+/** 서울·경기·인천 APT·무순위·임의공급 공고 (모집공고일 sinceDays일 이내), 중복 제거 + 상태 */
 async function capitalAnnouncements(sinceDays: number): Promise<PresaleListItem[]> {
   const today = kstToday();
   const since = new Date(Date.now() + 9 * 3600e3 - sinceDays * 86400e3).toISOString().slice(0, 10);
   const regions = [
     { keyword: "서울", p: PROVINCES[0] },
     { keyword: "경기", p: PROVINCES[1] },
+    { keyword: "인천", p: PROVINCES[2] },
   ];
   const kinds: AnnKind[] = ["remndr", "opt", "apt"];
   const jobs = regions.flatMap((r) =>
@@ -310,11 +311,12 @@ function demoCapital(): PresaleListItem[] {
   return demoAnnouncements("서울특별시 강남구").map((a, i) => ({
     ...a,
     ...(i === 0 ? { kind: "remndr" as const, kindLabel: "무순위" } : {}),
+    ...(i === 2 ? { address: "인천광역시 연수구 송도동 1" } : {}),
     status: presaleStatus(a, today),
   }));
 }
 
-/** 서울·경기 "줍줍"(무순위·재공급·임의공급) + 주목 분양(상한제·대단지 등) 중 청약예정·접수중 최대 limit개 */
+/** 서울·경기·인천 "줍줍"(무순위·재공급·임의공급) + 주목 분양(상한제·대단지 등) 중 청약예정·접수중 최대 limit개 */
 export async function getHotPresales(limit = 10): Promise<{ demo: boolean; items: HotItem[] }> {
   const demo = !getServiceKey();
   const all = demo ? demoCapital() : await capitalAnnouncements(90);
@@ -335,7 +337,7 @@ export type PresaleMapItem = HotItem & {
 
 const DONE_WINDOW_DAYS = 90;
 
-/** 분양 지도: 서울·경기 청약예정·접수중 + 최근 3개월 내 종료(발표·계약·완료) 공고와 좌표 */
+/** 분양 지도: 서울·경기·인천 청약예정·접수중 + 최근 3개월 내 종료(발표·계약·완료) 공고와 좌표 */
 export async function getPresaleMap(): Promise<{ demo: boolean; items: PresaleMapItem[]; missing: number }> {
   const demo = !getServiceKey();
   const today = kstToday();

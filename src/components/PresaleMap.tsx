@@ -1,5 +1,5 @@
 "use client";
-// 분양 탭 지도: 서울·경기 청약예정·접수중(진행중) + 최근 3개월 내 접수 종료(완료) 공고.
+// 분양 탭 지도: 서울·경기·인천 청약예정·접수중(진행중) + 최근 3개월 내 접수 종료(완료) 공고.
 // 줍줍(무순위·재공급·임의공급)은 보라, 주목 분양(상한제·대단지·서울 투기과열)은 노랑 배지로 구분.
 
 import Link from "next/link";
@@ -30,7 +30,13 @@ export type PresalePin = {
   approx: boolean;
 };
 
-type Area = "서울" | "경기";
+type Area = "서울" | "경기" | "인천";
+const AREAS: Area[] = ["서울", "경기", "인천"];
+const AREA_VIEW: Record<Area, [[number, number], number]> = {
+  서울: [[37.56, 126.98], 11],
+  경기: [[37.4, 127.1], 9],
+  인천: [[37.46, 126.68], 11],
+};
 
 const STATUS_COLOR: Record<PresaleStatus, string> = {
   접수중: "#dc2626",
@@ -81,7 +87,9 @@ export default function PresaleMap({
   const layerRef = useRef<import("leaflet").LayerGroup | null>(null);
   const LRef = useRef<typeof import("leaflet") | null>(null);
   const [ready, setReady] = useState(false);
-  const [area, setArea] = useState<Area>(() => (items.some((p) => p.group === "active" && p.address.startsWith("서울")) || !items.length ? "서울" : "경기"));
+  const [area, setArea] = useState<Area>(
+    () => AREAS.find((a) => items.some((p) => p.group === "active" && p.address.startsWith(a))) ?? "서울",
+  );
   const [showActive, setShowActive] = useState(true);
   const [showDone, setShowDone] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
@@ -164,7 +172,7 @@ export default function PresaleMap({
     }
   }, [ready, visible, selected]);
 
-  // 서울/경기 전환 시 해당 지역 공고에 화면 맞춤
+  // 서울/경기/인천 전환 시 해당 지역 공고에 화면 맞춤
   useEffect(() => {
     const L = LRef.current;
     const map = mapRef.current;
@@ -172,7 +180,7 @@ export default function PresaleMap({
     const pts = inArea.map((p) => [p.lat, p.lng] as [number, number]);
     if (pts.length > 1) map.fitBounds(L.latLngBounds(pts), { padding: [36, 36], maxZoom: 13 });
     else if (pts.length === 1) map.setView(pts[0], 13);
-    else map.setView(area === "서울" ? [37.56, 126.98] : [37.4, 127.1], area === "서울" ? 11 : 9);
+    else map.setView(...AREA_VIEW[area]);
   }, [ready, inArea, area]);
 
   function pick(p: PresalePin) {
@@ -184,11 +192,11 @@ export default function PresaleMap({
     <section className="overflow-hidden rounded-xl bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 bg-navy px-3 py-2">
         <h2 className="text-sm font-bold text-white">
-          서울·경기 분양 지도 <span className="font-normal text-slate-300">(청약홈 공고)</span>
+          수도권 분양 지도 <span className="font-normal text-slate-300">(청약홈 공고)</span>
         </h2>
         <div className="flex gap-1.5">
           <div className="flex overflow-hidden rounded-md bg-white/10 text-xs">
-            {(["서울", "경기"] as const).map((a) => (
+            {AREAS.map((a) => (
               <button
                 key={a}
                 onClick={() => {

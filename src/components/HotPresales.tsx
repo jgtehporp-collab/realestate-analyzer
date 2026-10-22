@@ -1,4 +1,4 @@
-// 분양 탭 좌측: 서울·경기 청약예정·접수중 중 줍줍(무순위·재공급·임의공급) / 주목 분양을 나눠 최대 10개
+// 분양 탭 좌측: 서울·경기·인천 청약예정·접수중 중 줍줍(무순위·재공급·임의공급) / 주목 분양을 나눠 최대 10개
 import Link from "next/link";
 import StatusBadge from "./StatusBadge";
 import TagBadge from "./TagBadge";
@@ -58,7 +58,7 @@ export default async function HotPresales() {
   return (
     <section className="overflow-hidden rounded-xl bg-white shadow-sm">
       <h2 className="bg-navy px-3 py-2 text-sm font-bold text-white">
-        줍줍 · 주목 분양 <span className="font-normal text-slate-300">(서울·경기)</span>
+        줍줍 · 주목 분양 <span className="font-normal text-slate-300">(서울·경기·인천)</span>
       </h2>
       {error && <p className="p-3 text-xs text-red-600">{error}</p>}
       {data?.demo && <p className="px-3 pt-2 text-[11px] text-amber-700">데모 데이터</p>}
