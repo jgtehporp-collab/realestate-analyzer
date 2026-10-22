@@ -1,10 +1,10 @@
-// 서울·경기 구(시)별·생활권별 가격/변동/거래량 통계 (순수 함수). 급등·급락과 같은 일일 작업에서 계산해
+// 서울·경기·인천 구(시)별·생활권별 가격/변동/거래량 통계 (순수 함수). 급등·급락과 같은 일일 작업에서 계산해
 // src/data/region-stats.json에 저장하고, 매매 화면의 지도가 읽음.
 import { computeComplexChanges, usableTrade, type HotTrade } from "./hot";
 import type { TradeRow } from "./molit";
 
-/** 서울 2030 생활권계획 5대 권역 + 경기 5개 권역 (지역 코드 → 권역) */
-export const ZONES: { zone: string; province: "서울" | "경기"; codes: string[] }[] = [
+/** 서울 2030 생활권계획 5대 권역 + 경기 5개 권역 + 인천 3개 권역 (지역 코드 → 권역) */
+export const ZONES: { zone: string; province: "서울" | "경기" | "인천"; codes: string[] }[] = [
   { zone: "도심권", province: "서울", codes: ["11110", "11140", "11170"] },
   { zone: "동북권", province: "서울", codes: ["11200", "11215", "11230", "11260", "11290", "11305", "11320", "11350"] },
   { zone: "서북권", province: "서울", codes: ["11380", "11410", "11440"] },
@@ -19,6 +19,9 @@ export const ZONES: { zone: string; province: "서울" | "경기"; codes: string
   { zone: "서북부", province: "경기", codes: ["41281", "41285", "41287", "41480", "41570"] },
   { zone: "동북부", province: "경기", codes: ["41150", "41630", "41310", "41360"] },
   { zone: "동남부", province: "경기", codes: ["41450", "41610", "41500"] },
+  { zone: "원도심", province: "인천", codes: ["28110", "28140", "28177"] },
+  { zone: "남부(송도·논현)", province: "인천", codes: ["28185", "28200"] },
+  { zone: "북부(부평·청라·검단)", province: "인천", codes: ["28237", "28245", "28260"] },
 ];
 
 export const zoneOf = (lawd: string) => ZONES.find((z) => z.codes.includes(lawd))?.zone ?? "기타";

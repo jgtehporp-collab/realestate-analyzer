@@ -1,6 +1,6 @@
 "use client";
 
-// 서울·경기 생활권 지도: 구(시)별 84㎡ 환산 중위가·변동률·거래량 라벨 + 선택 지역 상세 + 생활권 요약.
+// 서울·경기·인천 생활권 지도: 구(시)별 84㎡ 환산 중위가·변동률·거래량 라벨 + 선택 지역 상세 + 생활권 요약.
 import { useEffect, useMemo, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import type { RegionStat, RegionStatsFile } from "@/lib/regionStats";
@@ -82,7 +82,7 @@ export default function RegionMap({ data, vworldKey }: { data: RegionStatsFile; 
   const [ready, setReady] = useState(false);
   const [metric, setMetric] = useState<Metric>("price");
   const [selected, setSelected] = useState<string | null>(null);
-  const [area, setArea] = useState<"서울" | "경기">("서울");
+  const [area, setArea] = useState<"서울" | "경기" | "인천">("서울");
 
   const placed = useMemo(() => data.regions.filter((r) => r.lat !== null && r.lng !== null), [data]);
   const sel = data.regions.find((r) => r.lawd === selected) ?? null;
@@ -145,35 +145,37 @@ export default function RegionMap({ data, vworldKey }: { data: RegionStatsFile; 
     }
   }, [ready, placed, metric, selected]);
 
-  // 서울/경기 전환 시 해당 지역으로 화면 맞춤 (한 화면에 60곳을 다 넣으면 서울 라벨이 겹침)
+  // 서울/경기/인천 전환 시 해당 지역으로 화면 맞춤 (한 화면에 60곳을 다 넣으면 서울 라벨이 겹침)
   useEffect(() => {
     const L = LRef.current;
     const map = mapRef.current;
     if (!ready || !L || !map) return;
     const pts = placed.filter((r) => r.region.startsWith(area)).map((r) => [r.lat!, r.lng!] as [number, number]);
     if (pts.length) map.fitBounds(L.latLngBounds(pts), { padding: [28, 28] });
+    else if (area === "인천") map.setView([37.47, 126.68], 11); // 인천 추가 후 첫 일일 갱신 전
   }, [ready, placed, area]);
 
   if (!data.generatedAt || !placed.length) {
     return (
       <section className="rounded-xl bg-white p-4 text-sm text-slate-500 shadow-sm">
-        서울·경기 생활권 지도는 다음 일일 갱신(새벽 5시경) 후 표시됩니다.
+        수도권 생활권 지도는 다음 일일 갱신(새벽 5시경) 후 표시됩니다.
       </section>
     );
   }
 
   const seoulZones = data.zones.filter((z) => z.province === "서울");
   const ggZones = data.zones.filter((z) => z.province === "경기");
+  const icZones = data.zones.filter((z) => z.province === "인천");
 
   return (
     <section className="overflow-hidden rounded-xl bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 bg-navy px-3 py-2">
         <h2 className="text-sm font-bold text-white">
-          서울·경기 생활권 지도 <span className="font-normal text-slate-300">(84㎡ 환산 중위가)</span>
+          수도권 생활권 지도 <span className="font-normal text-slate-300">(84㎡ 환산 중위가)</span>
         </h2>
         <div className="flex gap-1.5">
         <div className="flex overflow-hidden rounded-md bg-white/10 text-xs">
-          {(["서울", "경기"] as const).map((a) => (
+          {(["서울", "경기", "인천"] as const).map((a) => (
             <button
               key={a}
               onClick={() => setArea(a)}
@@ -305,6 +307,7 @@ export default function RegionMap({ data, vworldKey }: { data: RegionStatsFile; 
         {[
           { title: "서울", list: seoulZones },
           { title: "경기", list: ggZones },
+          { title: "인천", list: icZones },
         ].map((g) => (
           <div key={g.title} className="mt-1.5 flex flex-wrap items-center gap-1.5">
             <span className="w-7 text-[11px] font-semibold text-slate-500">{g.title}</span>
