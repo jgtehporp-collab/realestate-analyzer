@@ -71,8 +71,20 @@ function rebMatches(region: string, row: RebRowLike): boolean {
   return tokens.length === 1 || row.full.includes(tokens[0].replace(/시$/, ""));
 }
 
+/** 행정구역 개편 후 R-ONE이 새 구 이름으로 집계하는 지역 (화면 지역 → 대체 이름, 앞쪽 우선) */
+const REB_ALIASES: Record<string, string[]> = {
+  "인천 중구": ["인천 영종구"],
+  "인천 동구": ["인천 제물포구"],
+  "인천 서구": ["인천 검단구"],
+  "경기 부천시": ["경기 부천시 원미구", "경기 부천시 소사구", "경기 부천시 오정구"],
+};
+
 export function rebStatFor(region: string, rows: RebRowLike[]): RebStat | null {
-  const mine = rows.filter((r) => rebMatches(region, r));
+  let mine = rows.filter((r) => rebMatches(region, r));
+  for (const alias of REB_ALIASES[region] ?? []) {
+    if (mine.length) break;
+    mine = rows.filter((r) => rebMatches(alias, r));
+  }
   if (!mine.length) return null;
   // 같은 이름이 다른 상위지역에도 있으면 첫 번째 계열만
   const full = mine[0].full;

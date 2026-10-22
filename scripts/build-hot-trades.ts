@@ -137,7 +137,12 @@ async function main() {
       `KOSIS: ${pop ? `${pop.length}행, 매칭 ${regions.filter((r) => r.pop).length}/${regions.length}곳` : "없음"}`,
   );
   const unmatched = regions.filter((r) => reb && !r.reb).map((r) => r.region);
-  if (unmatched.length) console.log("R-ONE 미매칭:", unmatched.join(", "), "| 예시 행:", JSON.stringify(reb?.slice(0, 3)));
+  if (unmatched.length) {
+    // 미매칭 지역이 속한 시·도의 R-ONE 지역명 목록 (이름 매칭 보완용)
+    const provinces = new Set(unmatched.map((r) => r.split(" ")[0]));
+    const names = [...new Set((reb ?? []).filter((r) => [...provinces].some((p) => r.full.startsWith(p))).map((r) => r.full))];
+    console.log("R-ONE 미매칭:", unmatched.join(", "), "| 해당 시·도 R-ONE 지역:", names.join(", "));
+  }
   const unmatchedPop = regions.filter((r) => pop && !r.pop).map((r) => r.region);
   if (unmatchedPop.length) console.log("KOSIS 미매칭:", unmatchedPop.join(", "), "| 예시 행:", JSON.stringify(pop?.slice(0, 3)));
   const regionOut: RegionStatsFile = {
