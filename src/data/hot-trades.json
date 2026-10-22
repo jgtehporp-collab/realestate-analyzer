@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T08:08:45.358Z",
+  "generatedAt": "2026-10-22T23:10:32.973Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -62,7 +62,7 @@
       "recentMedian": 53500,
       "change": 0.373555840821566,
       "baseCount": 26,
-      "recentCount": 5,
+      "recentCount": 7,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -117,6 +117,22 @@
       "lastYm": "202610"
     },
     {
+      "lawd": "41150",
+      "region": "경기 의정부시",
+      "id": "s:41150-71",
+      "aptNm": "은하수",
+      "umdNm": "신곡동",
+      "band": "40평대",
+      "area": 134.73,
+      "baseMedian": 50767,
+      "recentMedian": 42000,
+      "change": -0.17268564907592965,
+      "baseCount": 13,
+      "recentCount": 3,
+      "newHigh": false,
+      "lastYm": "202610"
+    },
+    {
       "lawd": "11500",
       "region": "서울 강서구",
       "id": "s:11500-28",
@@ -147,25 +163,11 @@
       "recentCount": 5,
       "newHigh": false,
       "lastYm": "202610"
-    },
-    {
-      "lawd": "11680",
-      "region": "서울 강남구",
-      "id": "s:11680-275",
-      "aptNm": "대우디오빌",
-      "umdNm": "역삼동",
-      "band": "10평대 이하",
-      "area": 30.03,
-      "baseMedian": 28800,
-      "recentMedian": 24300,
-      "change": -0.15625,
-      "baseCount": 13,
-      "recentCount": 3,
-      "newHigh": false,
-      "lastYm": "202609"
     }
   ],
   "failed": [
+    "경기 부천시(202610)",
+    "경기 화성시(202603,202604,202605,202606,202608,202609,202610)",
     "경기 양주시(202602,202603,202604,202605,202606,202607)"
   ]
 }
