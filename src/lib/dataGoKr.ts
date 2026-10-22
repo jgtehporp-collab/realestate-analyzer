@@ -40,7 +40,7 @@ function parseXml(text: string) {
 }
 
 // 공공데이터포털 초당 호출 제한(429 LIMITED_NUMBER_OF_SERVICE_REQUESTS_PER_SECOND) 대비: 동시 호출 수 제한
-const MAX_CONCURRENT = 4;
+const MAX_CONCURRENT = 3;
 let active = 0;
 const waiters: (() => void)[] = [];
 async function acquire() {
@@ -57,7 +57,7 @@ function release() {
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** 동시 호출 제한 + 429(초당 한도 초과) 시 잠시 후 최대 3회 재시도 */
+/** 동시 호출 제한 + 429(초당 한도 초과) 시 점점 길게 쉬며 최대 5회 재시도 (1.5·3·5·8·8초, 약간의 무작위 지연) */
 async function limitedFetch(url: string): Promise<Response> {
   for (let attempt = 0; ; attempt++) {
     await acquire();
@@ -67,8 +67,8 @@ async function limitedFetch(url: string): Promise<Response> {
     } finally {
       release();
     }
-    if (res.status !== 429 || attempt >= 3) return res;
-    await sleep(1500 * (attempt + 1));
+    if (res.status !== 429 || attempt >= 5) return res;
+    await sleep([1500, 3000, 5000, 8000, 8000][attempt] + Math.random() * 1000);
   }
 }
 

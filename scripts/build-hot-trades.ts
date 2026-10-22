@@ -124,6 +124,30 @@ async function main() {
       }
     }
   }
+  // 일부 달 실패 지역 재조회: 초당 한도(429)는 잠시 뒤면 풀리고, 성공한 달은 프록시 캐시라 호출이 적음
+  for (let pass = 1; pass <= 2 && partial.size; pass++) {
+    console.log(`일부 실패 ${partial.size}곳 재조회 (${pass}차, 20초 대기 후)`);
+    await new Promise((r) => setTimeout(r, 20_000));
+    for (const lawd of [...partial]) {
+      const t = targets.find((x) => x.lawd === lawd)!;
+      try {
+        const { rows, failedMonths, center, error } = await fetchDistrict(lawd, months);
+        const i = byLawd.findIndex((x) => x.lawd === lawd);
+        if (i >= 0) byLawd[i] = { ...t, rows, center: center ?? byLawd[i].center };
+        const k = failed.findIndex((f) => f.startsWith(`${t.region}(`));
+        if (k >= 0) failed.splice(k, 1);
+        if (failedMonths.length) {
+          failed.push(`${t.region}(${failedMonths.join(",")})`);
+          console.log(`  ⚠ ${t.region} 여전히 실패 ${failedMonths.join(",")}: ${error ?? "원인 미상"}`);
+        } else {
+          partial.delete(lawd);
+          console.log(`  ✓ ${t.region}: ${rows.length}건`);
+        }
+      } catch (e) {
+        console.error(`  ${t.region} 재조회 실패:`, e instanceof Error ? e.message : e);
+      }
+    }
+  }
   if (byLawd.length < targets.length / 2) throw new Error(`조회 실패 지역이 너무 많음 (${failed.length}/${targets.length})`);
   // 일부 달이 빠진 지역은 중위가가 왜곡돼 가짜 급등·급락이 생길 수 있어 제외
   const { up, down } = computeHotTrades(
