@@ -21,7 +21,10 @@ const FAIL_FAST = 4;
 const PROXY = process.env.HOT_SOURCE_URL?.trim().replace(/\/+$/, "");
 const SECRET = process.env.HOT_BUILD_SECRET?.trim();
 
-async function fetchDistrict(lawd: string, months: string[]): Promise<{ rows: TradeRow[]; failedMonths: string[]; center?: Center; codes?: string[] }> {
+async function fetchDistrict(
+  lawd: string,
+  months: string[],
+): Promise<{ rows: TradeRow[]; failedMonths: string[]; center?: Center; codes?: string[]; error?: string }> {
   if (!PROXY || !SECRET) return fetchTrades(lawd, months);
   const url = `${PROXY}/api/internal/trades?lawd=${lawd}&months=${months.join(",")}&center=1`;
   for (let attempt = 1; ; attempt++) {
@@ -85,18 +88,25 @@ async function main() {
   const byLawd: { lawd: string; region: string; rows: TradeRow[]; center: Center }[] = [];
   // 지도 좌표는 이전 파일 값을 재사용 (프록시에서 새로 못 받아도 유지)
   const prevCenters = new Map<string, Center>();
+  const prevRegions = new Map<string, RegionStatsFile["regions"][number]>();
   try {
     for (const r of (JSON.parse(readFileSync(OUT_REGIONS, "utf8")) as RegionStatsFile).regions) {
+      prevRegions.set(r.lawd, r);
       if (r.lat !== null && r.lng !== null) prevCenters.set(r.lawd, { lat: r.lat, lng: r.lng });
     }
   } catch {
     // 없음
   }
   const failed: string[] = [];
+  const partial = new Set<string>(); // 일부 달 조회 실패 지역 (급등·급락 제외, 지도는 이전 값 유지)
   for (const t of targets) {
     try {
-      const { rows, failedMonths, center, codes } = await fetchDistrict(t.lawd, months);
-      if (failedMonths.length) failed.push(`${t.region}(${failedMonths.join(",")})`);
+      const { rows, failedMonths, center, codes, error } = await fetchDistrict(t.lawd, months);
+      if (failedMonths.length) {
+        failed.push(`${t.region}(${failedMonths.join(",")})`);
+        partial.add(t.lawd);
+        console.log(`  ⚠ ${t.region} 일부 달 실패 ${failedMonths.join(",")}: ${error ?? "원인 미상"}`);
+      }
       byLawd.push({ ...t, rows, center: center ?? prevCenters.get(t.lawd) ?? null });
       console.log(`${t.region}: ${rows.length}건`);
       if (isSplitDistrict(t.lawd)) {
@@ -115,7 +125,11 @@ async function main() {
     }
   }
   if (byLawd.length < targets.length / 2) throw new Error(`조회 실패 지역이 너무 많음 (${failed.length}/${targets.length})`);
-  const { up, down } = computeHotTrades(byLawd, months);
+  // 일부 달이 빠진 지역은 중위가가 왜곡돼 가짜 급등·급락이 생길 수 있어 제외
+  const { up, down } = computeHotTrades(
+    byLawd.filter((x) => !partial.has(x.lawd)),
+    months,
+  );
   const out: HotTradesFile = {
     generatedAt: new Date().toISOString(),
     basis: `${months[6].slice(0, 4)}.${months[6].slice(4)}~${months[8].slice(0, 4)}.${months[8].slice(4)} vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)`,
@@ -125,7 +139,11 @@ async function main() {
   };
   writeFileSync(OUT, JSON.stringify(out, null, 2) + "\n");
 
-  const { regions, zones } = computeRegionStats(byLawd, months);
+  const computed = computeRegionStats(byLawd, months);
+  const zones = computed.zones;
+  // 일부 달 실패 지역은 이전 갱신 값 유지 (없으면 이번 값)
+  const regions = computed.regions.map((r) => (partial.has(r.lawd) && prevRegions.has(r.lawd) ? { ...prevRegions.get(r.lawd)!, reb: undefined, pop: undefined } : r));
+  if (partial.size) console.log(`일부 실패 ${partial.size}곳은 급등·급락에서 제외, 지도는 이전 값 유지`);
   const now = new Date(Date.now() + 9 * 3600e3);
   const startWeek = weekId(new Date(now.getTime() - 30 * 7 * 86400e3));
   const endWeek = weekId(now);

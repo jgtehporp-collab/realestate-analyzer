@@ -156,7 +156,7 @@ async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T)
   return results;
 }
 
-export type FetchResult<T> = { rows: T[]; failedMonths: string[]; codes?: string[] };
+export type FetchResult<T> = { rows: T[]; failedMonths: string[]; codes?: string[]; error?: string };
 
 async function fetchMonths<T>(
   kind: Kind,
@@ -180,7 +180,8 @@ async function fetchMonths<T>(
   if (failedMonths.length === months.length) {
     throw lastError instanceof Error ? lastError : new Error("실거래가 API 조회에 실패했습니다.");
   }
-  return { rows: perMonth.flat(), failedMonths: failedMonths.sort() };
+  const error = failedMonths.length ? (lastError instanceof Error ? lastError.message : String(lastError)) : undefined;
+  return { rows: perMonth.flat(), failedMonths: failedMonths.sort(), error };
 }
 
 /** 분구 등으로 한 지역이 여러 코드면 모두 조회해 합침 (기본 코드 실패만 오류, 추가 코드 실패는 무시) */
@@ -188,7 +189,11 @@ async function fetchMerged<T>(kind: Kind, lawd: string, months: string[], conver
   const codes = await sourceCodesFor(lawd);
   if (codes.length === 1) return fetchMonths(kind, lawd, months, convert);
   const [main, ...extra] = await Promise.all(
-    codes.map((c, i) => (i === 0 ? fetchMonths(kind, c, months, convert) : fetchMonths(kind, c, months, convert).catch(() => null))),
+    codes.map((c, i) =>
+      i === 0
+        ? fetchMonths(kind, c, months, convert)
+        : fetchMonths(kind, c, months, convert).catch((e) => ({ rows: [] as T[], failedMonths: months, error: e instanceof Error ? e.message : String(e) })),
+    ),
   );
   // 분구 전후로 같은 거래가 이전·신규 코드 양쪽에 실리는 경우가 있어 중복 제거
   const seen = new Set<string>();
@@ -201,7 +206,10 @@ async function fetchMerged<T>(kind: Kind, lawd: string, months: string[], conver
       seen.add(key);
       return true;
     });
-  return { rows, failedMonths: main!.failedMonths, codes };
+  // 신규 구 코드가 일부 달 실패해도 합계가 줄어 변동률이 왜곡되므로 실패 달로 함께 보고
+  const all = [main!, ...extra];
+  const failedMonths = [...new Set(all.flatMap((r) => r.failedMonths))].sort();
+  return { rows, failedMonths, codes, error: all.find((r) => r.error)?.error };
 }
 
 export function fetchTrades(lawd: string, months: string[]) {
