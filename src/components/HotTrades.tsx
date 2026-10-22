@@ -1,4 +1,4 @@
-// 매매 탭 좌측: 서울·경기 급등·급락 단지 (매일 아침 GitHub Actions가 src/data/hot-trades.json 갱신)
+// 매매 탭 좌측: 서울·경기·인천 급등·급락 단지 (매일 아침 GitHub Actions가 src/data/hot-trades.json 갱신)
 import Link from "next/link";
 import hot from "@/data/hot-trades.json";
 import { MIN_BASE, MIN_CHANGE, MIN_RECENT, type HotTrade, type HotTradesFile } from "@/lib/hot";
@@ -49,7 +49,7 @@ export default function HotTrades() {
   return (
     <section className="overflow-hidden rounded-xl bg-white shadow-sm">
       <h2 className="bg-navy px-3 py-2 text-sm font-bold text-white">
-        급등 · 급락 단지 <span className="font-normal text-slate-300">(서울·경기)</span>
+        급등 · 급락 단지 <span className="font-normal text-slate-300">(서울·경기·인천)</span>
       </h2>
       {!updated ? (
         <p className="p-3 text-xs text-slate-500">아직 생성 전입니다. 매일 아침 자동 갱신됩니다 (GitHub Actions에 DATA_GO_KR_KEY 시크릿 필요).</p>

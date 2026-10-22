@@ -1,4 +1,4 @@
-// 서울·경기 급등·급락 단지 목록 생성 → src/data/hot-trades.json
+// 서울·경기·인천 급등·급락 단지 목록 생성 → src/data/hot-trades.json
 // 실행: DATA_GO_KR_KEY=... npm run hot:build   (GitHub Actions에서 매일 아침 실행)
 // HOT_SOURCE_URL(배포 주소) + HOT_BUILD_SECRET이 있으면 Vercel 서울 리전 프록시(/api/internal/trades)로 조회 —
 // 공공데이터포털이 해외망(GitHub 러너) 접속을 막을 때 대비. 없으면 공공데이터포털 직접 호출.
@@ -81,7 +81,7 @@ async function main() {
   }
   const months = analysisMonths();
   console.log(`조회 경로: ${PROXY && SECRET ? `Vercel 프록시 (${PROXY})` : "공공데이터포털 직접"}, 기간 ${months[0]}~${months[8]}`);
-  const targets = PROVINCES.slice(0, 2).flatMap((p) => p.districts.map((d) => ({ lawd: d.code, region: `${p.short} ${d.name}` })));
+  const targets = PROVINCES.slice(0, 3).flatMap((p) => p.districts.map((d) => ({ lawd: d.code, region: `${p.short} ${d.name}` })));
   const byLawd: { lawd: string; region: string; rows: TradeRow[]; center: Center }[] = [];
   // 지도 좌표는 이전 파일 값을 재사용 (프록시에서 새로 못 받아도 유지)
   const prevCenters = new Map<string, Center>();

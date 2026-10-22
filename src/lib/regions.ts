@@ -132,6 +132,11 @@ export function regionLabel(code: string): string {
  */
 export const SPLIT_DISTRICTS: Record<string, string[]> = {
   "41590": ["경기도 화성시 만세구", "경기도 화성시 효행구", "경기도 화성시 병점구", "경기도 화성시 동탄구"],
+  // 인천 행정체제 개편(2026.7.1): 중구 영종 → 영종구, 중구 내륙+동구 → 제물포구, 서구 북부 → 검단구.
+  // 화면은 기존 구 단위를 유지하고 신규 구 거래를 가장 가까운 기존 구에 합산 (제물포구는 동구에 합산).
+  "28110": ["인천광역시 영종구"],
+  "28140": ["인천광역시 제물포구"],
+  "28260": ["인천광역시 서구", "인천광역시 검단구"],
 };
 
 export const isSplitDistrict = (lawd: string) => lawd in SPLIT_DISTRICTS;

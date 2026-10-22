@@ -1,4 +1,4 @@
-// 서울·경기 급등·급락 단지 산출 (순수 함수). 매일 GitHub Actions에서 scripts/build-hot-trades.ts로 실행해
+// 서울·경기·인천 급등·급락 단지 산출 (순수 함수). 매일 GitHub Actions에서 scripts/build-hot-trades.ts로 실행해
 // src/data/hot-trades.json에 저장하고, 매매 화면이 그 파일을 읽음.
 import { areaBand, complexId } from "./analysis";
 import type { TradeRow } from "./molit";

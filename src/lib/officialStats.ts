@@ -25,7 +25,7 @@ async function getJson(url: string, label: string): Promise<unknown> {
   }
 }
 
-/** R-ONE 주간 매매가격지수, 주차(YYYYWW) 구간의 서울·경기 행만 */
+/** R-ONE 주간 매매가격지수, 주차(YYYYWW) 구간의 서울·경기·인천 행만 */
 export function fetchRebWeekly(startWeek: string, endWeek: string): Promise<RebRow[]> {
   const key = rebKey();
   if (!key) throw new Error("REB_KEY(R-ONE 인증키)가 설정되지 않았습니다.");
@@ -46,7 +46,7 @@ export function fetchRebWeekly(startWeek: string, endWeek: string): Promise<RebR
       const rows = block.flatMap((b) => b.row ?? []);
       for (const r of rows) {
         const full = String(r.CLS_FULLNM ?? r.CLS_NM ?? "").trim();
-        if (!/^(서울|경기)/.test(full)) continue;
+        if (!/^(서울|경기|인천)/.test(full)) continue;
         const value = Number(r.DTA_VAL);
         if (!Number.isFinite(value)) continue;
         out.push({
@@ -63,7 +63,7 @@ export function fetchRebWeekly(startWeek: string, endWeek: string): Promise<RebR
   });
 }
 
-/** KOSIS 주민등록인구(행정구역 시군구별, 월) 최근 13개월 총인구 - 서울(11)·경기(41)만 */
+/** KOSIS 주민등록인구(행정구역 시군구별, 월) 최근 13개월 총인구 - 서울(11)·경기(41)·인천(28)만 */
 export function fetchKosisPopulation(): Promise<PopRow[]> {
   const key = kosisKey();
   if (!key) throw new Error("KOSIS_API_KEY가 설정되지 않았습니다.");
@@ -83,7 +83,7 @@ export function fetchKosisPopulation(): Promise<PopRow[]> {
         ym: String(r.PRD_DE ?? ""),
         value: Number(String(r.DT ?? "").replace(/,/g, "")),
       }))
-      .filter((r) => /^(11|41)/.test(r.code) && Number.isFinite(r.value));
+      .filter((r) => /^(11|41|28)/.test(r.code) && Number.isFinite(r.value));
   });
 }
 
