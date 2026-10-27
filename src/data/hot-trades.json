@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T23:41:07.340Z",
+  "generatedAt": "2026-10-27T23:44:11.967Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -14,7 +14,7 @@
       "recentMedian": 59500,
       "change": 0.4118612454781929,
       "baseCount": 58,
-      "recentCount": 11,
+      "recentCount": 12,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -62,7 +62,7 @@
       "recentMedian": 53500,
       "change": 0.373555840821566,
       "baseCount": 26,
-      "recentCount": 7,
+      "recentCount": 8,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -133,22 +133,6 @@
       "lastYm": "202610"
     },
     {
-      "lawd": "11500",
-      "region": "서울 강서구",
-      "id": "s:11500-28",
-      "aptNm": "현대1",
-      "umdNm": "염창동",
-      "band": "30평대",
-      "area": 84.34,
-      "baseMedian": 118299,
-      "recentMedian": 99000,
-      "change": -0.16313520902788425,
-      "baseCount": 11,
-      "recentCount": 4,
-      "newHigh": true,
-      "lastYm": "202609"
-    },
-    {
       "lawd": "41480",
       "region": "경기 파주시",
       "id": "s:41480-1773",
@@ -163,6 +147,22 @@
       "recentCount": 5,
       "newHigh": false,
       "lastYm": "202610"
+    },
+    {
+      "lawd": "11680",
+      "region": "서울 강남구",
+      "id": "s:11680-275",
+      "aptNm": "대우디오빌",
+      "umdNm": "역삼동",
+      "band": "10평대 이하",
+      "area": 30.03,
+      "baseMedian": 28800,
+      "recentMedian": 24300,
+      "change": -0.15625,
+      "baseCount": 13,
+      "recentCount": 3,
+      "newHigh": false,
+      "lastYm": "202609"
     }
   ],
   "failed": []
