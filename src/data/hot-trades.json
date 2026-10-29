@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T23:57:56.140Z",
+  "generatedAt": "2026-10-29T23:54:48.438Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -51,6 +51,22 @@
       "lastYm": "202610"
     },
     {
+      "lawd": "41117",
+      "region": "경기 수원시 영통구",
+      "id": "s:41117-69",
+      "aptNm": "늘푸른벽산",
+      "umdNm": "망포동",
+      "band": "20평대",
+      "area": 59.884,
+      "baseMedian": 43000,
+      "recentMedian": 58700,
+      "change": 0.3651162790697675,
+      "baseCount": 21,
+      "recentCount": 8,
+      "newHigh": true,
+      "lastYm": "202610"
+    },
+    {
       "lawd": "41173",
       "region": "경기 안양시 동안구",
       "id": "s:41173-40",
@@ -63,22 +79,6 @@
       "change": 0.36363636363636354,
       "baseCount": 18,
       "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202610"
-    },
-    {
-      "lawd": "41117",
-      "region": "경기 수원시 영통구",
-      "id": "s:41117-69",
-      "aptNm": "늘푸른벽산",
-      "umdNm": "망포동",
-      "band": "20평대",
-      "area": 59.884,
-      "baseMedian": 43000,
-      "recentMedian": 58450,
-      "change": 0.3593023255813954,
-      "baseCount": 21,
-      "recentCount": 6,
       "newHigh": true,
       "lastYm": "202610"
     }
@@ -133,6 +133,22 @@
       "lastYm": "202610"
     },
     {
+      "lawd": "11680",
+      "region": "서울 강남구",
+      "id": "s:11680-275",
+      "aptNm": "대우디오빌",
+      "umdNm": "역삼동",
+      "band": "10평대 이하",
+      "area": 30.03,
+      "baseMedian": 28800,
+      "recentMedian": 23900,
+      "change": -0.17013888888888884,
+      "baseCount": 13,
+      "recentCount": 4,
+      "newHigh": false,
+      "lastYm": "202610"
+    },
+    {
       "lawd": "41190",
       "region": "경기 부천시",
       "id": "s:41192-336",
@@ -146,22 +162,6 @@
       "baseCount": 12,
       "recentCount": 3,
       "newHigh": true,
-      "lastYm": "202610"
-    },
-    {
-      "lawd": "41480",
-      "region": "경기 파주시",
-      "id": "s:41480-1773",
-      "aptNm": "한울마을1단지운정신도시IPARK",
-      "umdNm": "동패동",
-      "band": "40평대",
-      "area": 109.9,
-      "baseMedian": 94250,
-      "recentMedian": 78935,
-      "change": -0.16248957284035703,
-      "baseCount": 6,
-      "recentCount": 5,
-      "newHigh": false,
       "lastYm": "202610"
     }
   ],
