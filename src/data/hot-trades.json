@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T23:54:48.438Z",
+  "generatedAt": "2026-10-30T23:34:35.541Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -14,7 +14,7 @@
       "recentMedian": 59500,
       "change": 0.4118612454781929,
       "baseCount": 58,
-      "recentCount": 13,
+      "recentCount": 14,
       "newHigh": true,
       "lastYm": "202610"
     },
