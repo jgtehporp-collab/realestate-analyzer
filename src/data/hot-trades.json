@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-01T23:27:52.123Z",
+  "generatedAt": "2026-11-03T02:09:42.860Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -14,7 +14,7 @@
       "recentMedian": 59500,
       "change": 0.4118612454781929,
       "baseCount": 58,
-      "recentCount": 14,
+      "recentCount": 15,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -35,6 +35,22 @@
       "lastYm": "202610"
     },
     {
+      "lawd": "41117",
+      "region": "경기 수원시 영통구",
+      "id": "s:41117-63",
+      "aptNm": "황골마을신명",
+      "umdNm": "영통동",
+      "band": "20평대",
+      "area": 59.99,
+      "baseMedian": 39927,
+      "recentMedian": 55000,
+      "change": 0.3775269980251512,
+      "baseCount": 23,
+      "recentCount": 11,
+      "newHigh": true,
+      "lastYm": "202610"
+    },
+    {
       "lawd": "41173",
       "region": "경기 안양시 동안구",
       "id": "s:41173-216",
@@ -46,7 +62,7 @@
       "recentMedian": 53500,
       "change": 0.373555840821566,
       "baseCount": 26,
-      "recentCount": 8,
+      "recentCount": 9,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -65,22 +81,6 @@
       "recentCount": 8,
       "newHigh": true,
       "lastYm": "202610"
-    },
-    {
-      "lawd": "41173",
-      "region": "경기 안양시 동안구",
-      "id": "s:41173-40",
-      "aptNm": "공작성일",
-      "umdNm": "관양동",
-      "band": "10평대 이하",
-      "area": 39.6,
-      "baseMedian": 38500,
-      "recentMedian": 52500,
-      "change": 0.36363636363636354,
-      "baseCount": 18,
-      "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202610"
     }
   ],
   "down": [
@@ -93,12 +93,12 @@
       "band": "20평대",
       "area": 49.98,
       "baseMedian": 26000,
-      "recentMedian": 20250,
-      "change": -0.22115384615384615,
+      "recentMedian": 20625,
+      "change": -0.20673076923076927,
       "baseCount": 7,
-      "recentCount": 3,
+      "recentCount": 4,
       "newHigh": false,
-      "lastYm": "202609"
+      "lastYm": "202610"
     },
     {
       "lawd": "41500",
