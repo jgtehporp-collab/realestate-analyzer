@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-05T00:51:24.376Z",
+  "generatedAt": "2026-11-06T00:58:25.717Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -85,6 +85,22 @@
   ],
   "down": [
     {
+      "lawd": "28245",
+      "region": "인천 계양구",
+      "id": "s:28245-34",
+      "aptNm": "태평",
+      "umdNm": "계산동",
+      "band": "20평대",
+      "area": 44.81,
+      "baseMedian": 14000,
+      "recentMedian": 10568,
+      "change": -0.24514102853134945,
+      "baseCount": 6,
+      "recentCount": 3,
+      "newHigh": false,
+      "lastYm": "202610"
+    },
+    {
       "lawd": "41273",
       "region": "경기 안산시 단원구",
       "id": "s:41273-77",
@@ -146,22 +162,6 @@
       "baseCount": 13,
       "recentCount": 4,
       "newHigh": false,
-      "lastYm": "202610"
-    },
-    {
-      "lawd": "41190",
-      "region": "경기 부천시",
-      "id": "s:41192-336",
-      "aptNm": "미리내마을(삼성)",
-      "umdNm": "중동",
-      "band": "20평대",
-      "area": 54,
-      "baseMedian": 47200,
-      "recentMedian": 39379,
-      "change": -0.1656997954618853,
-      "baseCount": 12,
-      "recentCount": 3,
-      "newHigh": true,
       "lastYm": "202610"
     }
   ],
