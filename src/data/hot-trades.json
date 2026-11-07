@@ -1,7 +1,23 @@
 {
-  "generatedAt": "2026-11-07T00:01:45.423Z",
+  "generatedAt": "2026-11-07T23:35:19.200Z",
   "basis": "2026.08~2026.10 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
+    {
+      "lawd": "41117",
+      "region": "경기 수원시 영통구",
+      "id": "s:41117-63",
+      "aptNm": "황골마을신명",
+      "umdNm": "영통동",
+      "band": "20평대",
+      "area": 59.99,
+      "baseMedian": 39927,
+      "recentMedian": 57500,
+      "change": 0.44014186157174895,
+      "baseCount": 23,
+      "recentCount": 13,
+      "newHigh": true,
+      "lastYm": "202610"
+    },
     {
       "lawd": "41117",
       "region": "경기 수원시 영통구",
@@ -31,22 +47,6 @@
       "change": 0.41025641025641035,
       "baseCount": 19,
       "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202610"
-    },
-    {
-      "lawd": "41117",
-      "region": "경기 수원시 영통구",
-      "id": "s:41117-63",
-      "aptNm": "황골마을신명",
-      "umdNm": "영통동",
-      "band": "20평대",
-      "area": 59.99,
-      "baseMedian": 39927,
-      "recentMedian": 56250,
-      "change": 0.4088344297984501,
-      "baseCount": 23,
-      "recentCount": 12,
       "newHigh": true,
       "lastYm": "202610"
     },
