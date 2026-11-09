@@ -1,7 +1,7 @@
 // 매매 탭 좌측: 서울·경기·인천 급등·급락 단지 (매일 아침 GitHub Actions가 src/data/hot-trades.json 갱신)
 import Link from "next/link";
 import hot from "@/data/hot-trades.json";
-import { MIN_BASE, MIN_CHANGE, MIN_RECENT, type HotTrade, type HotTradesFile } from "@/lib/hot";
+import { MIN_BASE, MIN_CHANGE, MIN_RECENT, PER_TIER, PRICE_TIERS, tierOf, type HotTrade, type HotTradesFile } from "@/lib/hot";
 import { formatEok, formatPct } from "@/lib/format";
 
 const data = hot as HotTradesFile;
@@ -10,6 +10,17 @@ function List({ title, items, color }: { title: string; items: HotTrade[]; color
   return (
     <div>
       <h3 className={`px-3 pt-2 text-xs font-bold ${color}`}>{title}</h3>
+      {PRICE_TIERS.map((t) => (
+        <Tier key={t.key} label={t.label} items={items.filter((x) => tierOf(x) === t).slice(0, PER_TIER)} color={color} />
+      ))}
+    </div>
+  );
+}
+
+function Tier({ label, items, color }: { label: string; items: HotTrade[]; color: string }) {
+  return (
+    <div>
+      <div className="mx-3 mt-1 border-b border-slate-100 pb-0.5 text-[10px] font-semibold text-slate-500">{label}</div>
       {items.length === 0 && <p className="px-3 py-1 text-[11px] text-slate-400">해당 단지 없음</p>}
       <ol>
         {items.map((x, i) => (
@@ -65,6 +76,7 @@ export default function HotTrades() {
               · 최소 거래: 최근 3개월 {MIN_RECENT}건, 이전 6개월 {MIN_BASE}건 이상
             </li>
             <li>· 변동 ±{Math.round(MIN_CHANGE * 100)}% 초과, 단지당 변동 큰 평형 1개</li>
+            <li>· 가격대(최근 3개월 중위가)별 상위 {PER_TIER}개씩: 15억 이상 / 9억~15억 / 9억 미만</li>
             <li>· 갱신 {updated} (KST, 매일 새벽 5시경 · 실패 시 7시·10시 재시도)</li>
           </ul>
         </>
