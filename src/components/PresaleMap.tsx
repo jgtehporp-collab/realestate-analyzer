@@ -1,6 +1,7 @@
 "use client";
 // 분양 탭 지도: 서울·경기·인천 청약예정·접수중(진행중) + 최근 3개월 내 접수 종료(완료) 공고.
 // 줍줍(무순위·재공급·임의공급)은 보라, 주목 분양(상한제·대단지·서울 투기과열)은 노랑 배지로 구분.
+// 대표 분양가(84㎡ 기준) 15억 이상은 검은 테두리·큰 라벨, 9억~15억은 남색 테두리로 강조. 완료 공고는 최종 경쟁률 표시.
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -28,7 +29,15 @@ export type PresalePin = {
   lat: number;
   lng: number;
   approx: boolean;
+  price: { amount: number; area: number } | null; // 대표 분양가(만원), 84㎡에 가장 가까운 주택형
+  cmpet: { rate: number; requests: number; supply: number; basis: string } | null; // 완료 공고 최종 경쟁률
 };
+
+type PriceTier = "high" | "mid" | null;
+const priceTier = (p: PresalePin): PriceTier => (!p.price ? null : p.price.amount >= 150000 ? "high" : p.price.amount >= 90000 ? "mid" : null);
+const TIER_LABEL = { high: "15억 이상", mid: "9억~15억" } as const;
+const eok = (manwon: number) => `${(manwon / 10000).toFixed(manwon >= 100000 ? 1 : 2).replace(/\.?0+$/, "")}억`;
+const rateText = (c: NonNullable<PresalePin["cmpet"]>) => (c.rate < 1 ? "미달" : `${c.rate >= 100 ? Math.round(c.rate) : c.rate.toFixed(1)}:1`);
 
 type Area = "서울" | "경기" | "인천";
 const AREAS: Area[] = ["서울", "경기", "인천"];
@@ -107,7 +116,14 @@ export default function PresaleMap({
         .sort((a, b) => rank(a) - rank(b) || (a.receiptStart || a.noticeDate).localeCompare(b.receiptStart || b.noticeDate)),
     [inArea],
   );
-  const doneCount = inArea.length - activeList.length;
+  const doneList = useMemo(
+    () =>
+      inArea
+        .filter((p) => p.group === "done")
+        .sort((a, b) => (b.winnerDate || b.receiptEnd || b.noticeDate).localeCompare(a.winnerDate || a.receiptEnd || a.noticeDate)),
+    [inArea],
+  );
+  const doneCount = doneList.length;
   const sel = items.find((p) => p.key === selected) ?? null;
 
   // 지도 생성 (1회)
@@ -156,16 +172,20 @@ export default function PresaleMap({
     const ordered = [...visible].sort((a, b) => (a.group === b.group ? 0 : a.group === "done" ? -1 : 1));
     for (const p of ordered) {
       const active = p.key === selected;
-      const cls = `pm-label${p.approx ? " pm-approx" : ""}${active ? " pm-active" : ""}`;
+      const tier = priceTier(p);
+      const tierCls = tier ? ` pm-tier-${tier}` : "";
+      const cls = `pm-label${tierCls}${p.approx ? " pm-approx" : ""}${active ? " pm-active" : ""}`;
       const badge = p.tag ? `<i class="pm-tag pm-${p.tag}">${TAG_TEXT[p.tag]}</i>` : "";
+      const price = p.price ? `<i class="pm-price">${eok(p.price.amount)}</i>` : "";
       const html =
         p.group === "active"
-          ? `<div class="${cls}" style="--c:${STATUS_COLOR[p.status]};background:var(--c)">${badge}<span>${esc(p.name.length > 14 ? `${p.name.slice(0, 13)}…` : p.name)}</span></div>`
-          : `<div class="pm-dot${p.tag ? ` pm-dot-${p.tag}` : ""}${active ? " pm-active" : ""}"></div>`;
+          ? `<div class="${cls}" style="--c:${STATUS_COLOR[p.status]};background:var(--c)">${badge}<span>${esc(p.name.length > 14 ? `${p.name.slice(0, 13)}…` : p.name)}</span>${price}</div>`
+          : `<div class="pm-dot${tierCls}${p.tag ? ` pm-dot-${p.tag}` : ""}${active ? " pm-active" : ""}">${p.cmpet ? `<i class="pm-rate">${rateText(p.cmpet)}</i>` : ""}</div>`;
+      const tierBoost = tier === "high" ? 300 : tier === "mid" ? 150 : 0;
       L.marker([p.lat, p.lng], {
         icon: L.divIcon({ className: "", iconSize: [0, 0], html }),
-        zIndexOffset: active ? 2000 : p.group === "active" ? 500 + (2 - rank(p)) * 100 : 0,
-        title: p.name,
+        zIndexOffset: active ? 3000 : p.group === "active" ? 500 + (2 - rank(p)) * 100 + tierBoost : tierBoost,
+        title: `${p.name}${p.price ? ` · 분양가 ${eok(p.price.amount)}` : ""}${p.cmpet ? ` · 경쟁률 ${rateText(p.cmpet)}` : ""}`,
       })
         .on("click", () => setSelected(p.key))
         .addTo(layer);
@@ -233,7 +253,7 @@ export default function PresaleMap({
           {sel ? (
             <div className="space-y-2">
               <button onClick={() => setSelected(null)} className="text-[11px] text-slate-400">
-                ← 진행중 목록
+                ← 목록
               </button>
               <div>
                 <div className="flex flex-wrap items-center gap-1">
@@ -257,6 +277,34 @@ export default function PresaleMap({
                 </dd>
                 <dt className="text-slate-500">당첨발표</dt>
                 <dd>{md(sel.winnerDate) || "—"}</dd>
+                <dt className="text-slate-500">대표 분양가</dt>
+                <dd>
+                  {sel.price ? (
+                    <>
+                      <b>{eok(sel.price.amount)}</b> <span className="text-slate-400">(전용 {sel.price.area}㎡ 최고가)</span>
+                      {priceTier(sel) && <PriceBadge tier={priceTier(sel)!} />}
+                    </>
+                  ) : (
+                    "—"
+                  )}
+                </dd>
+                {sel.group === "done" && (
+                  <>
+                    <dt className="text-slate-500">최종 경쟁률</dt>
+                    <dd>
+                      {sel.cmpet ? (
+                        <>
+                          <b className={sel.cmpet.rate < 1 ? "text-blue-600" : "text-red-600"}>{rateText(sel.cmpet)}</b>{" "}
+                          <span className="text-slate-400">
+                            ({sel.cmpet.basis}, 접수 {sel.cmpet.requests.toLocaleString("ko-KR")} / 공급 {sel.cmpet.supply.toLocaleString("ko-KR")})
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-slate-400">발표 전이거나 자료 없음</span>
+                      )}
+                    </dd>
+                  </>
+                )}
               </dl>
               {sel.reasons.length > 0 && (
                 <div className="flex flex-wrap gap-1">
@@ -288,13 +336,34 @@ export default function PresaleMap({
                       </div>
                       <div className="truncate text-[10px] text-slate-500">
                         {shortAddr(p.address)} · {p.households.toLocaleString("ko-KR")}세대
+                        {p.price && <span className={priceTier(p) ? "font-bold text-slate-800" : ""}> · {eok(p.price.amount)}</span>}
                         {dday(p, today) && <b className="ml-1 text-red-600">{dday(p, today)}</b>}
                       </div>
                     </button>
                   </li>
                 ))}
               </ul>
-              {doneCount > 0 && <p className="mt-2 text-[10px] text-slate-400">회색 점은 최근 3개월 내 접수가 끝난 공고입니다. 눌러서 결과를 볼 수 있습니다.</p>}
+              {doneCount > 0 && (
+                <>
+                  <div className="mb-1 mt-3 text-[11px] font-semibold text-slate-600">
+                    {area} 최근 완료 {doneCount}건 <span className="font-normal text-slate-400">(최종 경쟁률)</span>
+                  </div>
+                  <ul className="divide-y divide-slate-100">
+                    {doneList.map((p) => (
+                      <li key={p.key}>
+                        <button onClick={() => pick(p)} className="flex w-full items-center gap-1 py-1 text-left">
+                          {priceTier(p) && <PriceBadge tier={priceTier(p)!} />}
+                          <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                          {p.price && <span className="shrink-0 text-[10px] text-slate-500">{eok(p.price.amount)}</span>}
+                          <b className={`w-12 shrink-0 text-right ${p.cmpet && p.cmpet.rate < 1 ? "text-blue-600" : "text-red-600"}`}>
+                            {p.cmpet ? rateText(p.cmpet) : "—"}
+                          </b>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </div>
           )}
         </aside>
@@ -319,10 +388,26 @@ export default function PresaleMap({
         <span className="flex items-center gap-1">
           <TagBadge tag="hot" /> 상한제·대단지·서울 투기과열
         </span>
+        <span className="flex items-center gap-1">
+          <PriceBadge tier="high" /> 굵은 검은 테두리
+        </span>
+        <span className="flex items-center gap-1">
+          <PriceBadge tier="mid" /> 남색 테두리 (대표 분양가, 84㎡ 기준)
+        </span>
         <span>점선 = 동 단위 추정 위치</span>
         {missing > 0 && <span>· 위치 미확인 {missing}건 제외</span>}
         {demo && <span className="text-amber-700">· 데모 데이터</span>}
       </div>
     </section>
+  );
+}
+
+function PriceBadge({ tier }: { tier: "high" | "mid" }) {
+  return (
+    <span
+      className={`ml-1 inline-block shrink-0 whitespace-nowrap rounded px-1 py-px text-[10px] font-bold ${tier === "high" ? "bg-slate-900 text-white" : "bg-blue-900 text-white"}`}
+    >
+      {TIER_LABEL[tier]}
+    </span>
   );
 }

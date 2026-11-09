@@ -333,7 +333,35 @@ export type PresaleMapItem = HotItem & {
   lat: number;
   lng: number;
   approx: boolean; // 주소로 정확한 위치를 못 찾아 단지명·동 단위로 표시
+  price: { amount: number; area: number } | null; // 대표 분양가(만원): 전용 84㎡에 가장 가까운 주택형의 최고 분양가
+  cmpet: { rate: number; requests: number; supply: number; basis: string } | null; // 최종(평균) 경쟁률, 완료 공고만
 };
+
+/** 대표 분양가: 전용 84㎡에 가장 가까운 주택형의 최고 분양가 */
+export function representativePrice(models: HouseModel[]): PresaleMapItem["price"] {
+  const priced = models.filter((m) => m.topPrice > 0 && m.area > 0);
+  if (!priced.length) return null;
+  const m = priced.reduce((best, x) => (Math.abs(x.area - 84) < Math.abs(best.area - 84) ? x : best));
+  return { amount: m.topPrice, area: Math.round(m.area) };
+}
+
+/**
+ * 공고 전체 평균 경쟁률. APT는 1순위(지역 구분 합산) 접수 ÷ 일반공급 세대(주택형별 1회),
+ * 무순위·임의공급은 전체 접수 ÷ 공급 세대.
+ */
+export function overallCompetition(rows: Competition[], kind: AnnKind): PresaleMapItem["cmpet"] {
+  const target = kind === "apt" ? rows.filter((r) => r.rank === "1") : rows;
+  if (!target.length) return null;
+  const supplyBy = new Map<string, number>();
+  for (const r of target) {
+    const k = r.modelNo || r.houseType;
+    supplyBy.set(k, Math.max(supplyBy.get(k) ?? 0, r.supply));
+  }
+  const supply = [...supplyBy.values()].reduce((a, b) => a + b, 0);
+  const requests = target.reduce((a, r) => a + r.requests, 0);
+  if (!supply) return null;
+  return { rate: requests / supply, requests, supply, basis: kind === "apt" ? "1순위 평균" : "평균" };
+}
 
 const DONE_WINDOW_DAYS = 90;
 
@@ -358,9 +386,35 @@ export async function getPresaleMap(): Promise<{ demo: boolean; items: PresaleMa
       missing++;
       return null;
     }
-    return { ...a, ...classifyPresale(a), group, lat: p.lat, lng: p.lng, approx: p.approx };
+    const [models, competition] = demo
+      ? [demoModels(a.houseManageNo), demoCompetition(a.houseManageNo, group)]
+      : await Promise.all([
+          getModels(a.houseManageNo, a.kind).catch(() => [] as HouseModel[]),
+          group === "done" ? getCompetition(a.houseManageNo, a.kind).catch(() => [] as Competition[]) : ([] as Competition[]),
+        ]);
+    return {
+      ...a,
+      ...classifyPresale(a),
+      group,
+      lat: p.lat,
+      lng: p.lng,
+      approx: p.approx,
+      price: representativePrice(models),
+      cmpet: group === "done" ? overallCompetition(competition, a.kind) : null,
+    };
   });
   return { demo, items: items.filter((x): x is PresaleMapItem => x !== null), missing };
+}
+
+function demoModels(no: string): HouseModel[] {
+  const n = [...no].reduce((s, c) => s + c.charCodeAt(0), 0);
+  const topPrice = [72000, 118000, 172000][n % 3];
+  return [{ modelNo: "01", houseType: "084.9800A", area: 84.98, supplyArea: 112, general: 100, special: 50, topPrice }];
+}
+
+function demoCompetition(no: string, group: "active" | "done"): Competition[] {
+  if (group !== "done") return [];
+  return [{ modelNo: "01", houseType: "084.9800A", rank: "1", reside: "해당지역", supply: 100, requests: 1234, rate: "12.34" }];
 }
 
 function demoPoint(no: string) {
