@@ -127,3 +127,56 @@ body {
 .pm-dot.pm-dot-hot {
   background: #fcd34d;
 }
+
+/* 분양 지도: 분양가 강조 (84㎡ 기준 15억 이상 / 9억~15억) + 완료 경쟁률 */
+.pm-price {
+  font-style: normal;
+  margin-left: 3px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.92);
+  color: #0f172a;
+  font-size: 10px;
+}
+.pm-label.pm-tier-high {
+  font-size: 13px;
+  padding: 4px 8px 4px 4px;
+  box-shadow: 0 0 0 3px #0f172a, 0 2px 6px rgb(0 0 0 / 0.45);
+}
+.pm-label.pm-tier-high .pm-price {
+  background: #0f172a;
+  color: #fde68a;
+  font-size: 11px;
+}
+.pm-label.pm-tier-mid {
+  font-size: 12px;
+  box-shadow: 0 0 0 2px #1e3a8a, 0 1px 4px rgb(0 0 0 / 0.4);
+}
+.pm-label.pm-tier-mid .pm-price {
+  background: #1e3a8a;
+  color: #fff;
+}
+.pm-dot.pm-tier-high {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #0f172a;
+}
+.pm-dot.pm-tier-mid {
+  width: 15px;
+  height: 15px;
+  border: 2px solid #1e3a8a;
+}
+.pm-rate {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translate(3px, -50%);
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  color: #334155;
+  background: rgb(255 255 255 / 0.9);
+  padding: 0 3px;
+  border-radius: 3px;
+  white-space: nowrap;
+}

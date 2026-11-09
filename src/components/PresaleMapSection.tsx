@@ -33,6 +33,8 @@ export default async function PresaleMapSection() {
     lat: a.lat,
     lng: a.lng,
     approx: a.approx,
+    price: a.price,
+    cmpet: a.cmpet,
   }));
   return <PresaleMap items={pins} demo={data.demo} missing={data.missing} vworldKey={vworldKey()} />;
 }
