@@ -96,16 +96,30 @@ export function computeComplexChanges(byLawd: { lawd: string; region: string; ro
   return out;
 }
 
+/**
+ * 가격대 구간 (최근 3개월 중위가 기준, 만원). 변동률만으로 줄 세우면 저가 단지만 올라와서 구간별로 나눠 뽑음.
+ * 화면 표시 순서 = 배열 순서 (고가 → 저가).
+ */
+export const PRICE_TIERS = [
+  { key: "high", label: "15억 이상", min: 150000, max: Infinity },
+  { key: "mid", label: "9억~15억", min: 90000, max: 150000 },
+  { key: "low", label: "9억 미만", min: 0, max: 90000 },
+] as const;
+export const PER_TIER = 2;
+
+export const tierOf = (x: { recentMedian: number }) => PRICE_TIERS.find((t) => x.recentMedian >= t.min && x.recentMedian < t.max)!;
+
 export function computeHotTrades(
   byLawd: { lawd: string; region: string; rows: TradeRow[] }[],
   months: string[],
-  limit = 5,
+  perTier = PER_TIER,
 ): { up: HotTrade[]; down: HotTrade[] } {
   const out = computeComplexChanges(byLawd, months);
-  // 한 단지는 한 번만 (변동폭이 가장 큰 평형)
+  // 가격대별 상위 perTier개, 한 단지는 한 번만 (변동폭이 가장 큰 평형). 결과는 고가 구간부터
   const pick = (list: HotTrade[]) => {
     const seen = new Set<string>();
-    return list.filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true))).slice(0, limit);
+    const unique = list.filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)));
+    return PRICE_TIERS.flatMap((t) => unique.filter((x) => tierOf(x) === t).slice(0, perTier));
   };
   const up = pick(out.filter((x) => x.change > MIN_CHANGE).sort((a, b) => b.change - a.change));
   const down = pick(out.filter((x) => x.change < -MIN_CHANGE).sort((a, b) => a.change - b.change));
