@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-11T00:32:47.611Z",
+  "generatedAt": "2026-11-12T01:53:44.431Z",
   "basis": "2026.09~2026.11 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -37,6 +37,22 @@
     {
       "lawd": "41590",
       "region": "경기 화성시",
+      "id": "s:41590-960",
+      "aptNm": "시범다은마을삼성래미안",
+      "umdNm": "반송동",
+      "band": "30평대",
+      "area": 84.6098,
+      "baseMedian": 76900,
+      "recentMedian": 104000,
+      "change": 0.35240572171651485,
+      "baseCount": 19,
+      "recentCount": 3,
+      "newHigh": true,
+      "lastYm": "202611"
+    },
+    {
+      "lawd": "41590",
+      "region": "경기 화성시",
       "id": "s:41590-1438",
       "aptNm": "동탄역반도유보라아이비파크2.0",
       "umdNm": "영천동",
@@ -46,22 +62,6 @@
       "recentMedian": 94018,
       "change": 0.33975596871366665,
       "baseCount": 53,
-      "recentCount": 4,
-      "newHigh": true,
-      "lastYm": "202611"
-    },
-    {
-      "lawd": "41590",
-      "region": "경기 화성시",
-      "id": "s:41590-1831",
-      "aptNm": "힐스테이트동탄",
-      "umdNm": "목동",
-      "band": "30평대",
-      "area": 84.8479,
-      "baseMedian": 87350,
-      "recentMedian": 115097,
-      "change": 0.3176524755936587,
-      "baseCount": 56,
       "recentCount": 4,
       "newHigh": true,
       "lastYm": "202611"
@@ -125,10 +125,10 @@
       "band": "30평대",
       "area": 76.79,
       "baseMedian": 346000,
-      "recentMedian": 315500,
-      "change": -0.0881502890173409,
+      "recentMedian": 315750,
+      "change": -0.08742774566473976,
       "baseCount": 21,
-      "recentCount": 23,
+      "recentCount": 26,
       "newHigh": false,
       "lastYm": "202610"
     },
