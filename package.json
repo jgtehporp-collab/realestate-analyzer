@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "hot:build": "tsx --conditions=react-server scripts/build-hot-trades.ts"
+    "hot:build": "tsx --conditions=react-server scripts/build-hot-trades.ts",
+    "presale:alert": "tsx --conditions=react-server scripts/presale-alert.ts"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

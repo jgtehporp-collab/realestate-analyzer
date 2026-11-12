@@ -62,6 +62,20 @@ npm run dev
 - 전세 = 월세 0원 거래, 최근 전세가는 마지막 전세 거래월 기준 3개월 평균
 - 전고점 = 기간 내 최고 월평균, 하락점 = 전고점 이후 최저, 상승시작 = 전고점 이전 최저(5% 이상 상승 시)
 
+## 신규 분양 텔레그램 알림
+
+GitHub Actions(`.github/workflows/presale-alert.yml`)가 매일 09:23·13:23·18:23(KST)에 서울·경기·인천 청약예정·접수중 공고를 확인해,
+처음 보는 공고만 텔레그램으로 보냅니다 (단지명·지역·세대수·대표 분양가·일정·줍줍/주목 구분, 앱 분석 화면·청약홈 공고 링크).
+보낸 공고는 `src/data/presale-seen.json`에 기록되고, 첫 실행 때는 기존 공고를 알림 없이 기록만 하고 시작 안내 1건을 보냅니다.
+
+설정 (GitHub 저장소 Settings → Secrets and variables → Actions):
+1. 텔레그램 @BotFather에서 `/newbot`으로 봇을 만들고 받은 토큰을 `TELEGRAM_BOT_TOKEN`에 등록
+2. 텔레그램에서 만든 봇에게 아무 메시지나 보내기 (함께 받을 사람도 각자 보내거나, 봇을 넣은 그룹방에서 메시지 1개)
+3. Actions → "신규 분양 텔레그램 알림" → Run workflow 실행 → 로그에 나온 채팅 ID를 `TELEGRAM_CHAT_ID`에 등록 (여러 개면 쉼표로)
+4. 다시 Run workflow 실행 → 시작 안내 메시지 확인
+
+조회는 급등·급락과 같은 Vercel 프록시(`HOT_SOURCE_URL`, `HOT_BUILD_SECRET`)를 사용합니다. 로컬 확인: `DRY_RUN=1 npm run presale:alert` (보내지 않고 메시지만 출력)
+
 ## 배포 (사파리에서 사용)
 Vercel 함수는 `vercel.json`으로 서울 리전(icn1)에서 실행됩니다(공공데이터포털 해외 접속 장애 회피). Vercel에 저장소를 연결하고 환경변수 `DATA_GO_KR_KEY`를 설정하면 됩니다. 아이폰 사파리에서 "홈 화면에 추가"하면 앱처럼 쓸 수 있습니다.
 

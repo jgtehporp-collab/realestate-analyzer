@@ -435,3 +435,61 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (x: T) => Promise<R
   );
   return out;
 }
+
+export type PresaleFeedItem = {
+  key: string; // `${kind}:${houseManageNo}`
+  no: string;
+  kind: AnnKind;
+  kindLabel: string;
+  name: string;
+  address: string;
+  status: PresaleStatus;
+  households: number;
+  noticeDate: string;
+  specialStart: string;
+  receiptStart: string;
+  receiptEnd: string;
+  winnerDate: string;
+  tag: PresaleTag;
+  reasons: string[];
+  price: { amount: number; area: number } | null;
+  url: string; // 청약홈 공고 원문
+};
+
+/**
+ * 텔레그램 신규 분양 알림용: 서울·경기·인천 최근 sinceDays일 공고(청약예정·접수중) + 대표 분양가.
+ * 분양가는 주택형 API를 공고마다 불러야 해서 모집공고 14일 이내 공고만 채움.
+ */
+export async function getPresaleFeed(sinceDays = 30): Promise<{ demo: boolean; items: PresaleFeedItem[] }> {
+  const demo = !getServiceKey();
+  const all = (demo ? demoCapital() : await capitalAnnouncements(sinceDays)).filter((a) => a.status === "청약예정" || a.status === "접수중");
+  const recent = new Date(Date.now() + 9 * 3600e3 - 14 * 86400e3).toISOString().slice(0, 10);
+  const items = await mapLimit(all, 6, async (a) => {
+    const models = demo
+      ? demoModels(a.houseManageNo)
+      : a.noticeDate >= recent
+        ? await getModels(a.houseManageNo, a.kind).catch(() => [] as HouseModel[])
+        : [];
+    const { tag, reasons } = classifyPresale(a);
+    return {
+      key: `${a.kind}:${a.houseManageNo}`,
+      no: a.houseManageNo,
+      kind: a.kind,
+      kindLabel: a.kindLabel,
+      name: a.name,
+      address: a.address,
+      status: a.status,
+      households: a.households,
+      noticeDate: a.noticeDate,
+      specialStart: a.specialStart,
+      receiptStart: a.receiptStart,
+      receiptEnd: a.receiptEnd,
+      winnerDate: a.winnerDate,
+      tag,
+      reasons,
+      price: representativePrice(models),
+      url: a.url,
+    };
+  });
+  return { demo, items };
+}
