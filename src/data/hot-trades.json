@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T00:59:40.033Z",
+  "generatedAt": "2026-11-14T00:55:39.727Z",
   "basis": "2026.09~2026.11 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -91,15 +91,31 @@
       "band": "20평대",
       "area": 59.79,
       "baseMedian": 42996,
-      "recentMedian": 59600,
-      "change": 0.386162411495089,
+      "recentMedian": 59745,
+      "change": 0.389534786489498,
       "baseCount": 50,
-      "recentCount": 16,
+      "recentCount": 18,
       "newHigh": true,
       "lastYm": "202611"
     }
   ],
   "down": [
+    {
+      "lawd": "11680",
+      "region": "서울 강남구",
+      "id": "s:11680-428",
+      "aptNm": "현대14차(203,204,205,206동)",
+      "umdNm": "압구정동",
+      "band": "30평대",
+      "area": 84.98,
+      "baseMedian": 585000,
+      "recentMedian": 526000,
+      "change": -0.10085470085470083,
+      "baseCount": 6,
+      "recentCount": 3,
+      "newHigh": false,
+      "lastYm": "202611"
+    },
     {
       "lawd": "11650",
       "region": "서울 서초구",
@@ -115,22 +131,6 @@
       "recentCount": 5,
       "newHigh": false,
       "lastYm": "202609"
-    },
-    {
-      "lawd": "11680",
-      "region": "서울 강남구",
-      "id": "s:11680-218",
-      "aptNm": "은마",
-      "umdNm": "대치동",
-      "band": "30평대",
-      "area": 76.79,
-      "baseMedian": 346000,
-      "recentMedian": 315500,
-      "change": -0.0881502890173409,
-      "baseCount": 21,
-      "recentCount": 27,
-      "newHigh": false,
-      "lastYm": "202610"
     },
     {
       "lawd": "41465",
