@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-15T23:55:16.337Z",
+  "generatedAt": "2026-11-17T02:52:21.988Z",
   "basis": "2026.09~2026.11 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -19,18 +19,18 @@
       "lastYm": "202610"
     },
     {
-      "lawd": "41117",
-      "region": "경기 수원시 영통구",
-      "id": "s:41117-270",
-      "aptNm": "광교e편한세상",
-      "umdNm": "이의동",
-      "band": "40평대",
-      "area": 120.7597,
-      "baseMedian": 213618,
-      "recentMedian": 250613,
-      "change": 0.17318435754189943,
-      "baseCount": 41,
-      "recentCount": 5,
+      "lawd": "11560",
+      "region": "서울 영등포구",
+      "id": "s:11560-138",
+      "aptNm": "당산삼성래미안4차",
+      "umdNm": "당산동5가",
+      "band": "30평대",
+      "area": 97.27,
+      "baseMedian": 225694,
+      "recentMedian": 263387,
+      "change": 0.16701207746730495,
+      "baseCount": 10,
+      "recentCount": 3,
       "newHigh": true,
       "lastYm": "202610"
     },
@@ -59,10 +59,10 @@
       "band": "30평대",
       "area": 84.9921,
       "baseMedian": 70175,
-      "recentMedian": 94018,
-      "change": 0.33975596871366665,
+      "recentMedian": 94000,
+      "change": 0.3395029199628965,
       "baseCount": 53,
-      "recentCount": 4,
+      "recentCount": 5,
       "newHigh": true,
       "lastYm": "202611"
     },
@@ -75,12 +75,12 @@
       "band": "20평대",
       "area": 59.99,
       "baseMedian": 41027,
-      "recentMedian": 57500,
-      "change": 0.4015039091881165,
-      "baseCount": 23,
-      "recentCount": 11,
+      "recentMedian": 58270,
+      "change": 0.42026414971600956,
+      "baseCount": 22,
+      "recentCount": 12,
       "newHigh": true,
-      "lastYm": "202610"
+      "lastYm": "202611"
     },
     {
       "lawd": "41117",
@@ -91,10 +91,10 @@
       "band": "20평대",
       "area": 59.79,
       "baseMedian": 42996,
-      "recentMedian": 59745,
-      "change": 0.389534786489498,
+      "recentMedian": 59790,
+      "change": 0.3905813856256941,
       "baseCount": 50,
-      "recentCount": 18,
+      "recentCount": 19,
       "newHigh": true,
       "lastYm": "202611"
     }
@@ -133,6 +133,22 @@
       "lastYm": "202609"
     },
     {
+      "lawd": "28185",
+      "region": "인천 연수구",
+      "id": "s:28185-747",
+      "aptNm": "송도아트윈푸르지오",
+      "umdNm": "송도동",
+      "band": "40평대",
+      "area": 106.78,
+      "baseMedian": 112400,
+      "recentMedian": 99534,
+      "change": -0.11446280991735525,
+      "baseCount": 9,
+      "recentCount": 4,
+      "newHigh": false,
+      "lastYm": "202611"
+    },
+    {
       "lawd": "41465",
       "region": "경기 용인시 수지구",
       "id": "s:41465-277",
@@ -147,22 +163,6 @@
       "recentCount": 5,
       "newHigh": false,
       "lastYm": "202611"
-    },
-    {
-      "lawd": "11740",
-      "region": "서울 강동구",
-      "id": "s:11740-7",
-      "aptNm": "삼익그린2차",
-      "umdNm": "명일동",
-      "band": "20평대",
-      "area": 42.93,
-      "baseMedian": 145000,
-      "recentMedian": 132761,
-      "change": -0.08440631900798379,
-      "baseCount": 15,
-      "recentCount": 3,
-      "newHigh": true,
-      "lastYm": "202610"
     },
     {
       "lawd": "41410",
