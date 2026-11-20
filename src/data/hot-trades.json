@@ -1,7 +1,23 @@
 {
-  "generatedAt": "2026-11-19T01:51:12.493Z",
+  "generatedAt": "2026-11-20T01:54:38.117Z",
   "basis": "2026.09~2026.11 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
+    {
+      "lawd": "41590",
+      "region": "경기 화성시",
+      "id": "s:41590-1344",
+      "aptNm": "동탄역센트럴자이(A-10)",
+      "umdNm": "영천동",
+      "band": "30평대",
+      "area": 84.9103,
+      "baseMedian": 117340,
+      "recentMedian": 154950,
+      "change": 0.3205247433749865,
+      "baseCount": 24,
+      "recentCount": 3,
+      "newHigh": true,
+      "lastYm": "202611"
+    },
     {
       "lawd": "11560",
       "region": "서울 영등포구",
@@ -17,22 +33,6 @@
       "recentCount": 3,
       "newHigh": true,
       "lastYm": "202610"
-    },
-    {
-      "lawd": "41210",
-      "region": "경기 광명시",
-      "id": "s:41210-3461",
-      "aptNm": "광명역파크자이",
-      "umdNm": "일직동",
-      "band": "30평대",
-      "area": 95.3749,
-      "baseMedian": 138500,
-      "recentMedian": 160554,
-      "change": 0.15923811267865373,
-      "baseCount": 16,
-      "recentCount": 4,
-      "newHigh": true,
-      "lastYm": "202611"
     },
     {
       "lawd": "41590",
@@ -53,16 +53,16 @@
     {
       "lawd": "41590",
       "region": "경기 화성시",
-      "id": "s:41590-1438",
-      "aptNm": "동탄역반도유보라아이비파크2.0",
-      "umdNm": "영천동",
+      "id": "s:41590-980",
+      "aptNm": "동탄나루마을동탄역U.BORA여울숲1.0",
+      "umdNm": "반송동",
       "band": "30평대",
-      "area": 84.9921,
-      "baseMedian": 70175,
-      "recentMedian": 94000,
-      "change": 0.3395029199628965,
-      "baseCount": 53,
-      "recentCount": 5,
+      "area": 84.6841,
+      "baseMedian": 69484,
+      "recentMedian": 93425,
+      "change": 0.34456707198815817,
+      "baseCount": 21,
+      "recentCount": 4,
       "newHigh": true,
       "lastYm": "202611"
     },
@@ -165,6 +165,22 @@
       "lastYm": "202611"
     },
     {
+      "lawd": "41173",
+      "region": "경기 안양시 동안구",
+      "id": "s:41173-88",
+      "aptNm": "초원부영",
+      "umdNm": "평촌동",
+      "band": "20평대",
+      "area": 50,
+      "baseMedian": 70000,
+      "recentMedian": 50000,
+      "change": -0.2857142857142857,
+      "baseCount": 39,
+      "recentCount": 3,
+      "newHigh": false,
+      "lastYm": "202611"
+    },
+    {
       "lawd": "41410",
       "region": "경기 군포시",
       "id": "s:41410-43",
@@ -178,22 +194,6 @@
       "baseCount": 9,
       "recentCount": 4,
       "newHigh": false,
-      "lastYm": "202610"
-    },
-    {
-      "lawd": "28245",
-      "region": "인천 계양구",
-      "id": "s:28245-34",
-      "aptNm": "태평",
-      "umdNm": "계산동",
-      "band": "20평대",
-      "area": 44.81,
-      "baseMedian": 14000,
-      "recentMedian": 10568,
-      "change": -0.24514102853134945,
-      "baseCount": 5,
-      "recentCount": 3,
-      "newHigh": true,
       "lastYm": "202610"
     }
   ],
