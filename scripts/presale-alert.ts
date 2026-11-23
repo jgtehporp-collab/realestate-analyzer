@@ -5,7 +5,7 @@
 // TELEGRAM_CHAT_ID 없이 실행하면 봇에게 온 최근 메시지의 채팅 ID를 로그에 출력 (처음 설정용).
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { PresaleFeedItem } from "../src/lib/presale";
+import type { MarginSummary, PresaleFeedItem } from "../src/lib/presale";
 
 const SEEN_FILE = process.env.PRESALE_SEEN_FILE || join(process.cwd(), "src/data/presale-seen.json");
 const KEEP_DAYS = 200; // 이보다 오래 전에 본 공고는 기록에서 정리
@@ -58,7 +58,7 @@ async function send(html: string) {
   }
 }
 
-function message(x: PresaleFeedItem): string {
+function message(x: PresaleFeedItem, margin: MarginSummary | null = null): string {
   const head = x.tag === "zupzup" ? "🟣 줍줍" : x.tag === "hot" ? "🟡 주목" : "🆕 신규";
   const tier = x.price && x.price.amount >= 150000 ? " 💎15억↑" : x.price && x.price.amount >= 90000 ? " 🔷9억↑" : "";
   const region = x.address.split(/\s+/).slice(0, 3).join(" ");
@@ -69,6 +69,13 @@ function message(x: PresaleFeedItem): string {
     `📍 ${esc(region)} · ${x.households.toLocaleString("ko-KR")}세대${x.kind === "apt" ? "" : ` · ${esc(x.kindLabel)}`}`,
   ];
   if (x.price) lines.push(`💰 대표 분양가 ${eok(x.price.amount)} (전용 ${x.price.area}㎡ 최고가)`);
+  if (margin) {
+    const sign = margin.margin >= 0 ? "+" : "−";
+    const where = margin.basis === "same" ? "같은 단지 최근 실거래" : "인근 신축 시세";
+    lines.push(
+      `💵 ${where} ${eok(margin.market)} (${margin.count}건) → ${margin.margin >= 0 ? "차익" : "시세보다 비쌈"} 약 ${sign}${eok(Math.abs(margin.margin))}${margin.area !== x.price?.area ? ` (전용 ${margin.area}㎡ 기준)` : ""}`,
+    );
+  }
   lines.push(
     `📅 공고 ${md(x.noticeDate) || "—"}${x.specialStart ? ` · 특공 ${md(x.specialStart)}` : ""} · 접수 ${receipt}${x.winnerDate ? ` · 발표 ${md(x.winnerDate)}` : ""}`,
   );
@@ -97,6 +104,28 @@ async function fetchFeed(): Promise<PresaleFeedItem[]> {
   // 프록시 없이 직접 (로컬 실행: DATA_GO_KR_KEY 필요, --conditions=react-server)
   const { getPresaleFeed } = await import("../src/lib/presale");
   return (await getPresaleFeed()).items;
+}
+
+/** 줍줍 공고의 안전마진 요약 (실패해도 알림은 보냄) */
+async function fetchMargin(x: PresaleFeedItem): Promise<MarginSummary | null> {
+  if (x.kind === "apt") return null;
+  try {
+    if (APP && SECRET) {
+      const res = await fetch(`${APP}/api/internal/presales?margin=${x.kind}:${encodeURIComponent(x.no)}`, {
+        headers: { authorization: `Bearer ${SECRET}` },
+        signal: AbortSignal.timeout(90_000),
+      });
+      const body = (await res.json()) as { margin?: MarginSummary | null; error?: string };
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${body.error ?? ""}`);
+      return body.margin ?? null;
+    }
+    const { getPresaleDetail, marginSummary } = await import("../src/lib/presale");
+    const d = await getPresaleDetail(x.no, x.kind);
+    return d ? marginSummary(d.models) : null;
+  } catch (e) {
+    console.log(`  (안전마진 조회 실패: ${x.name} - ${e instanceof Error ? e.message : e})`);
+    return null;
+  }
 }
 
 /** 처음 설정용: 봇에게 메시지를 보낸 채팅의 ID 출력 */
@@ -147,7 +176,7 @@ async function main() {
       .sort((a, b) => (a.tag === b.tag ? 0 : a.tag === "zupzup" ? -1 : b.tag === "zupzup" ? 1 : a.tag === "hot" ? -1 : 1));
     console.log(`신규 ${fresh.length}건`);
     for (const x of fresh.slice(0, MAX_PER_RUN)) {
-      await send(message(x));
+      await send(message(x, await fetchMargin(x)));
       file.seen[x.key] = today; // 보낸 것만 기록 (중간 실패 시 다음 실행에서 다시 시도)
       console.log(`  전송: ${x.name}`);
     }

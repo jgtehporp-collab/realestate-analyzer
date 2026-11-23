@@ -34,11 +34,13 @@ export type RentRow = {
   day: number;
 };
 
-type Kind = "trade" | "rent";
+type Kind = "trade" | "rent" | "silv";
 
 const ENDPOINTS: Record<Kind, string> = {
   trade: "https://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev",
   rent: "https://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent",
+  // 아파트 분양권전매 신고 자료 (입주 전 단지의 분양권·입주권 거래) - 공공데이터포털 별도 활용신청 필요
+  silv: "https://apis.data.go.kr/1613000/RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade",
 };
 
 const PAGE_SIZE = 1000;
@@ -66,7 +68,7 @@ async function fetchPage(kind: Kind, lawd: string, ym: string, page: number) {
   return callDataGoKr(
     ENDPOINTS[kind],
     { LAWD_CD: lawd, DEAL_YMD: ym, numOfRows: PAGE_SIZE, pageNo: page },
-    kind === "trade" ? "매매 실거래가 API" : "전월세 실거래가 API",
+    kind === "trade" ? "매매 실거래가 API" : kind === "rent" ? "전월세 실거래가 API" : "분양권전매 실거래가 API",
   );
 }
 
@@ -214,6 +216,11 @@ async function fetchMerged<T>(kind: Kind, lawd: string, months: string[], conver
 
 export function fetchTrades(lawd: string, months: string[]) {
   return fetchMerged("trade", lawd, months, toTrade);
+}
+
+/** 아파트 분양권·입주권 전매 실거래 (매매와 같은 형식, buildYear 없음) */
+export function fetchPresaleRights(lawd: string, months: string[]) {
+  return fetchMerged("silv", lawd, months, toTrade);
 }
 
 export function fetchRents(lawd: string, months: string[]) {

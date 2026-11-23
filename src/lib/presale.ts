@@ -15,7 +15,8 @@ import {
 import { getServiceKey } from "./dataGoKr";
 import type { Grade } from "./location";
 import { demoAnnouncements, demoPresaleDetail, demoRows } from "./demo";
-import { fetchTrades, recentMonths, type TradeRow } from "./molit";
+import { fetchPresaleRights, fetchTrades, recentMonths, type TradeRow } from "./molit";
+import { nameSimilarity } from "./kapt";
 import { geocodePresale } from "./location";
 import { PROVINCES, findRegion } from "./regions";
 
@@ -92,7 +93,8 @@ export type ModelRow = HouseModel & {
   competition: { rate: string; requests: number; supply: number } | null; // 1순위 해당지역
   score: { low: number; avg: number; high: number } | null; // 해당지역 당첨가점
   market: { median: number; count: number; basis: string; comparables: Comparable[] } | null;
-  margin: number | null; // 인근 시세 - 분양가 (만원)
+  marginBasis: "same" | "nearby" | null; // same: 같은 단지 실거래(줍줍), nearby: 인근 신축
+  margin: number | null; // 시세 - 분양가 (만원)
   marginPct: number | null;
 };
 
@@ -110,6 +112,56 @@ const median = (xs: number[]) => {
   const m = Math.floor(s.length / 2);
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
+
+/** 공고명에서 줍줍 표기(무순위·잔여세대 등)·괄호를 지워 실거래 단지명과 비교하기 쉽게 */
+export function presaleBaseName(name: string): string {
+  return name
+    .replace(/\([^)]*\)|\[[^\]]*\]/g, " ")
+    .replace(/무순위|잔여세대|잔여|재공급|임의공급|사후접수|계약취소주택|취소후재공급|불법행위|선착순|추가|모집|공고|분양/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * 실거래 중 공고 단지와 같은 단지: 같은 법정동 + 단지명 유사도 0.75 이상인 단지 중 가장 비슷한 단지명만
+ * ("힐스테이트 e편한세상 문정" 공고에 이웃 "e편한세상 문정"이 섞이지 않도록)
+ */
+export function sameComplexRows(rows: TradeRow[], name: string, address: string): TradeRow[] {
+  const base = presaleBaseName(name);
+  if (!base) return [];
+  const sim = new Map<string, number>();
+  for (const t of rows) {
+    if (sim.has(t.aptNm) || (t.umdNm && !address.includes(t.umdNm))) continue;
+    const s = nameSimilarity(t.aptNm, base);
+    // 포함관계(0.9)는 길이가 크게 다르면 다른 단지일 가능성이 커서 낮춤
+    const lenRatio = Math.min(t.aptNm.replace(/\s/g, "").length, base.replace(/\s/g, "").length) / Math.max(t.aptNm.replace(/\s/g, "").length, base.replace(/\s/g, "").length);
+    sim.set(t.aptNm, s === 0.9 && lenRatio < 0.7 ? s * lenRatio : s);
+  }
+  const best = Math.max(0, ...sim.values());
+  if (best < 0.75) return [];
+  return rows.filter((t) => sim.get(t.aptNm) === best);
+}
+
+/**
+ * 줍줍(무순위·재공급·임의공급)용: 같은 단지 최근 실거래(매매·분양권) 중 전용 ±3㎡ 중위가.
+ * 최근 6개월 거래가 있으면 6개월, 없으면 12개월.
+ */
+export function sameComplexMarket(area: number, sale: TradeRow[], rights: TradeRow[], months12: string[]): ModelRow["market"] {
+  const tag = (ts: TradeRow[], label: string) => ts.filter((t) => Math.abs(t.area - area) <= 3 && !t.direct).map((t) => ({ t, label }));
+  const all = [...tag(sale, "매매"), ...tag(rights, "분양권")];
+  const recent6 = new Set(months12.slice(-6));
+  for (const [win, use] of [
+    ["6개월", all.filter((x) => recent6.has(x.t.ym))],
+    ["12개월", all],
+  ] as const) {
+    if (!use.length) continue;
+    const byKind = new Map<string, number[]>();
+    for (const x of use) byKind.set(x.label, [...(byKind.get(x.label) ?? []), x.t.price]);
+    const comparables = [...byKind.entries()].map(([label, ps]) => ({ aptNm: `${use[0].t.aptNm} ${label}`, buildYear: use[0].t.buildYear, count: ps.length, median: median(ps) }));
+    return { median: median(use.map((x) => x.t.price)), count: use.length, basis: `같은 단지 최근 ${win}·전용 ±3㎡`, comparables };
+  }
+  return null;
+}
 
 /** 같은 구 최근 12개월 실거래 중 신축(5년 이내, 부족하면 10년 이내)·유사면적(±5㎡) 중위가격 */
 export function marketFor(area: number, trades: TradeRow[], thisYear: number): ModelRow["market"] {
@@ -142,7 +194,21 @@ export async function getPresaleDetail(houseManageNo: string, kind: AnnKind = "a
       demo: true,
       announcement: { ...d.announcement, status: presaleStatus(d.announcement, today) },
       lawd,
-      models: combine(d.models, d.competition, d.scores, trades, thisYear),
+      // 데모 줍줍: 같은 단지 거래를 가상으로 만들어 이원화된 안전마진 화면 확인
+      models: combine(
+        d.models,
+        d.competition,
+        d.scores,
+        trades,
+        thisYear,
+        kind === "apt"
+          ? null
+          : {
+              sale: trades.slice(0, 8).map((t) => ({ ...t, aptNm: presaleBaseName(d.announcement.name), price: Math.round(t.price * 1.25) })),
+              rights: [],
+              months12: recentMonths(12),
+            },
+      ),
       errors,
     };
   }
@@ -155,23 +221,42 @@ export async function getPresaleDetail(houseManageNo: string, kind: AnnKind = "a
       errors.push(`${what}: ${e instanceof Error ? e.message : e}`);
       return [] as T[];
     });
-  const [models, competition, scores, trades] = await Promise.all([
+  const months12 = recentMonths(12);
+  const zupzup = kind !== "apt";
+  const [models, competition, scores, trades, rights] = await Promise.all([
     soft(getModels(houseManageNo, kind), "주택형"),
     soft(getCompetition(houseManageNo, kind), "경쟁률"),
     kind === "apt" ? soft(getScores(houseManageNo), "당첨가점") : Promise.resolve([] as Score[]),
-    lawd ? soft(fetchTrades(lawd, recentMonths(12)).then((r) => r.rows), "인근 실거래") : Promise.resolve([] as TradeRow[]),
+    lawd ? soft(fetchTrades(lawd, months12).then((r) => r.rows), "인근 실거래") : Promise.resolve([] as TradeRow[]),
+    // 줍줍은 같은 단지 분양권 거래도 시세로 사용 (입주 전 단지)
+    lawd && zupzup ? soft(fetchPresaleRights(lawd, months12).then((r) => r.rows), "분양권 실거래") : Promise.resolve([] as TradeRow[]),
   ]);
   if (!lawd) errors.push("인근 실거래: 지원 지역(구) 밖이라 비교 불가");
+  const same = zupzup
+    ? {
+        sale: sameComplexRows(trades, announcement.name, announcement.address),
+        rights: sameComplexRows(rights, announcement.name, announcement.address),
+        months12,
+      }
+    : null;
   return {
     demo: false,
     announcement: { ...announcement, status: presaleStatus(announcement, today) },
     lawd,
-    models: combine(models, competition, scores, trades, thisYear),
+    models: combine(models, competition, scores, trades, thisYear, same),
     errors,
   };
 }
 
-function combine(models: HouseModel[], competition: Competition[], scores: Score[], trades: TradeRow[], thisYear: number): ModelRow[] {
+/** same이 있으면(줍줍) 같은 단지 실거래 우선, 없으면 인근 신축 실거래로 안전마진 계산 */
+function combine(
+  models: HouseModel[],
+  competition: Competition[],
+  scores: Score[],
+  trades: TradeRow[],
+  thisYear: number,
+  same: { sale: TradeRow[]; rights: TradeRow[]; months12: string[] } | null = null,
+): ModelRow[] {
   const isLocal = (reside: string) => reside.includes("해당");
   return models.map((m) => {
     // 무순위·임의공급 경쟁률은 모델번호·순위·거주구분 없이 주택형 단위로 옴
@@ -182,13 +267,16 @@ function combine(models: HouseModel[], competition: Competition[], scores: Score
         (!x.reside || isLocal(x.reside)),
     );
     const s = scores.find((x) => x.modelNo === m.modelNo && isLocal(x.reside));
-    const market = m.area ? marketFor(m.area, trades, thisYear) : null;
+    const sameMarket = same && m.area ? sameComplexMarket(m.area, same.sale, same.rights, same.months12) : null;
+    const market = sameMarket ?? (m.area ? marketFor(m.area, trades, thisYear) : null);
+    const marginBasis = sameMarket ? ("same" as const) : market ? ("nearby" as const) : null;
     const margin = market && m.topPrice ? market.median - m.topPrice : null;
     return {
       ...m,
       competition: c ? { rate: c.rate, requests: c.requests, supply: c.supply } : null,
       score: s && (s.low || s.avg || s.high) ? { low: s.low, avg: s.avg, high: s.high } : null,
       market,
+      marginBasis,
       margin,
       marginPct: margin !== null && m.topPrice ? margin / m.topPrice : null,
     };
@@ -492,4 +580,14 @@ export async function getPresaleFeed(sinceDays = 30): Promise<{ demo: boolean; i
     };
   });
   return { demo, items };
+}
+
+export type MarginSummary = { houseType: string; area: number; price: number; market: number; margin: number; basis: "same" | "nearby"; count: number };
+
+/** 알림용 안전마진 요약: 전용 84㎡에 가장 가까운 주택형 (그 주택형에 시세가 없으면 시세가 있는 주택형 중 가장 가까운 것) */
+export function marginSummary(models: ModelRow[]): MarginSummary | null {
+  const ok = models.filter((m) => m.margin !== null && m.market && m.marginBasis && m.topPrice > 0);
+  if (!ok.length) return null;
+  const m = ok.reduce((best, x) => (Math.abs(x.area - 84) < Math.abs(best.area - 84) ? x : best));
+  return { houseType: m.houseType, area: Math.round(m.area), price: m.topPrice, market: m.market!.median, margin: m.margin!, basis: m.marginBasis!, count: m.market!.count };
 }
