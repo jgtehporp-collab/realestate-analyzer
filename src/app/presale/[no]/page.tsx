@@ -57,6 +57,11 @@ export default async function PresaleDetailPage({
     else compareGroups.push({ types: [m.houseType], market: m.market });
   }
 
+  // 안전마진 기준: 줍줍은 같은 단지 실거래(매매·분양권), 없으면/일반 분양은 인근 신축
+  const anySame = models.some((m) => m.marginBasis === "same");
+  const anyNearby = models.some((m) => m.marginBasis === "nearby");
+  const basisName = (m: ModelRow) => (m.marginBasis === "same" ? "같은 단지 실거래" : "인근 신축");
+
   const flags = [
     a.priceCap && "분양가상한제",
     a.overheated && "투기과열지구",
@@ -67,15 +72,19 @@ export default async function PresaleDetailPage({
 
   const summary: string[] = [];
   if (best?.market && best.marginPct !== null) {
-    const detailText = `${best.houseType}(전용 ${best.area}㎡) 분양가 ${formatEok(best.topPrice)} vs 인근 신축 ${formatEok(best.market.median)} → ${best.margin! >= 0 ? "+" : ""}${formatEok(best.margin)} (${formatPct(best.marginPct, 0, true)})`;
+    const detailText = `${best.houseType}(전용 ${best.area}㎡) 분양가 ${formatEok(best.topPrice)} vs ${basisName(best)} ${formatEok(best.market.median)} → ${best.margin! >= 0 ? "+" : ""}${formatEok(best.margin)} (${formatPct(best.marginPct, 0, true)})`;
     summary.push(
       best.margin! >= 0
         ? `안전마진이 가장 큰 주택형: ${detailText}.`
-        : `모든 주택형이 인근 신축 시세보다 높음. 차이가 가장 작은 주택형: ${detailText}. 입지·브랜드 프리미엄을 감안해 판단 필요.`,
+        : `모든 주택형이 ${basisName(best)} 시세보다 높음. 차이가 가장 작은 주택형: ${detailText}. 입지·브랜드 프리미엄을 감안해 판단 필요.`,
     );
   } else if (models.length) {
-    summary.push("인근 신축 실거래가 부족해 안전마진을 계산하지 못했습니다.");
+    summary.push(
+      kind === "apt" ? "인근 신축 실거래가 부족해 안전마진을 계산하지 못했습니다." : "같은 단지·인근 신축 실거래가 없어 안전마진을 계산하지 못했습니다.",
+    );
   }
+  if (kind !== "apt" && anySame)
+    summary.push("줍줍 공고라 같은 단지의 최근 실거래(매매·분양권)를 시세로 사용했습니다. 당첨 즉시 기대 차익에 가깝지만 전매제한·실거주 의무를 공고문에서 확인하세요.");
   if (a.priceCap) summary.push("분양가상한제 적용 단지로 전매제한·실거주 의무 여부를 공고문에서 확인하세요.");
   const cmp = models.filter((m) => m.competition);
   if (cmp.length) {
@@ -168,7 +177,7 @@ export default async function PresaleDetailPage({
                 <table className="w-full min-w-[640px] border-collapse text-center text-xs">
                   <thead className="bg-slate-100">
                     <tr>
-                      {["주택형", "공급(일반/특별)", "분양가(최고)", "1순위 해당 경쟁률", "당첨가점 최저/평균", "인근 신축 시세", "안전마진"].map((h) => (
+                      {["주택형", "공급(일반/특별)", "분양가(최고)", "1순위 해당 경쟁률", "당첨가점 최저/평균", anySame && !anyNearby ? "같은 단지 시세" : anySame ? "시세 (같은 단지/인근)" : "인근 신축 시세", "안전마진"].map((h) => (
                         <th key={h} className="border border-slate-200 px-2 py-1.5 font-semibold">
                           {h}
                         </th>
@@ -192,7 +201,10 @@ export default async function PresaleDetailPage({
                           {m.market ? (
                             <>
                               {formatEok(m.market.median)}
-                              <div className="text-[10px] text-slate-500">{m.market.count}건</div>
+                              <div className="text-[10px] text-slate-500">
+                                {anySame && anyNearby && <span className={m.marginBasis === "same" ? "font-semibold text-violet-700" : ""}>{m.marginBasis === "same" ? "같은 단지 " : "인근 "}</span>}
+                                {m.market.count}건
+                              </div>
                             </>
                           ) : (
                             "—"
@@ -220,12 +232,19 @@ export default async function PresaleDetailPage({
                 </table>
               )}
               <p className="px-3 py-1.5 text-[10px] text-slate-500">
+                {kind !== "apt" && (
+                  <>
+                    같은 단지 시세(줍줍): 이 단지 최근 6개월(없으면 12개월) 매매·분양권 실거래 중 전용 ±3㎡ 거래의 중위가격(직거래 제외). 없으면 인근 신축 기준.{" "}
+                  </>
+                )}
                 인근 신축 시세: 같은 구 최근 12개월 실거래 중 입주 5년 이내(부족하면 10년)·전용 ±5㎡ 거래의 중위가격. 분양가는 주택형 최고가 기준. 경쟁률·가점은 발표 후 표시.
               </p>
             </section>
 
             <section className="overflow-hidden rounded-sm bg-white shadow-sm">
-              <h3 className="bg-navy px-3 py-1 text-[13px] font-bold text-white">비교 단지 (인근 신축 실거래)</h3>
+              <h3 className="bg-navy px-3 py-1 text-[13px] font-bold text-white">
+                {anySame && !anyNearby ? "비교 거래 (같은 단지 실거래)" : anySame ? "비교 거래 (같은 단지 / 인근 신축)" : "비교 단지 (인근 신축 실거래)"}
+              </h3>
               {models.some((m) => m.market?.comparables.length) ? (
                 <div className="grid gap-px bg-slate-200 sm:grid-cols-2">
                   {compareGroups.map((g) => (
@@ -236,7 +255,7 @@ export default async function PresaleDetailPage({
                       {g.market.comparables.map((c) => (
                         <div key={c.aptNm} className="mt-0.5 flex justify-between">
                           <span>
-                            {c.aptNm} <span className="text-slate-400">{c.buildYear}년</span>
+                            {c.aptNm} {c.buildYear > 0 && <span className="text-slate-400">{c.buildYear}년</span>}
                           </span>
                           <span className="font-semibold">
                             {formatEok(c.median)} <span className="font-normal text-slate-400">({c.count}건)</span>
