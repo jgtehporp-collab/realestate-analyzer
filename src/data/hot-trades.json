@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-25T03:29:30.213Z",
+  "generatedAt": "2026-11-26T02:45:46.459Z",
   "basis": "2026.09~2026.11 vs 직전 6개월 (같은 단지·평형 중위가, 직거래·1층·도시형생활주택 제외)",
   "up": [
     {
@@ -141,10 +141,10 @@
       "band": "40평대",
       "area": 106.78,
       "baseMedian": 112400,
-      "recentMedian": 99534,
-      "change": -0.11446280991735525,
+      "recentMedian": 98466,
+      "change": -0.12396694214876025,
       "baseCount": 9,
-      "recentCount": 4,
+      "recentCount": 5,
       "newHigh": false,
       "lastYm": "202611"
     },
